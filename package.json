@@ -1,7 +1,7 @@
 {
   "name": "storagemanager",
   "version": "1.0.0",
-  "description": "A lightweight wrapper for localStorage with efficient caching, optional encryption and JSON support.",
+  "description": "A lightweight wrapper for Storage-like interfaces with efficient caching, out-of-the-box encryption and JSON support.",
   "license": "MIT",
   "author": "Khoeckman",
   "type": "module",
