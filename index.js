@@ -132,15 +132,21 @@ export default class StorageManager {
   }
 
   /**
-   * Synchronizes the internal cache with the latest stored value.
-   * Reads the actual value from storage, decrypts and parses it,
-   * then updates the internal cache (`#value`).
+   * Retrieves and synchronizes the internal cache with the latest stored value.
    *
-   * @returns {*} The latest stored value, or the default value if none exists.
+   * This method reads the raw value from the underlying storage, applies decryption
+   * if configured, parses JSON-encoded objects (marked with a `\0` prefix),
+   * and updates the internal cache (`#value`) accordingly.
+   *
+   * Unlike the {@link StorageManager.value|value} getter, this method always performs
+   * a real storage read and decryption to ensure synchronization with external changes.
+   *
+   * @returns {*} The actual value, or the default value if none exists.
    */
   getItem() {
     let value = this.storage.getItem(this.itemName)
-    if (typeof value === 'string' && value.startsWith('\0')) value = JSON.parse(this.decryptFn(value).slice(1))
-    return (this.#value = value ?? this.defaultValue)
+    if (typeof value !== 'string') return (this.#value = value ?? this.defaultValue)
+    value = this.decryptFn(value)
+    return (this.#value = value.startsWith('\0') ? JSON.parse(value.slice(1)) : value)
   }
 }
