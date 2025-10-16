@@ -7,7 +7,7 @@ import prettier from 'rollup-plugin-prettier'
 export default {
   input: 'index.js',
   output: {
-    file: 'dist/StorageManager.umd.js',
+    file: 'index.umd.js',
     format: 'umd',
     name: 'StorageManager',
   },

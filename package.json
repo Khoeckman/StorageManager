@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "Khoeckman",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "index.umd.js",
   "module": "index.js",
   "types": "index.d.ts",
   "scripts": {
