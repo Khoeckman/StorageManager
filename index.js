@@ -107,8 +107,8 @@ export default class StorageManager {
    */
   set value(value) {
     this.#value = value
-    if (typeof value !== 'string') '\0' + JSON.stringify(value)
-    this.storage.setItem(this.itemName, this.encryptFn('' + value))
+    if (typeof value !== 'string') value = '\0' + JSON.stringify(value)
+    this.storage.setItem(this.itemName, this.encryptFn(value))
   }
 
   /**
