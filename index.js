@@ -59,7 +59,7 @@ export default class StorageManager {
    * @param {Function} [options.decryptFn] - A custom function to decrypt values after retrieving.
    * Should accept one argument (the stored string) and return the decrypted value.
    * @param {Storage} [options.storage=window.localStorage] - A custom storage provider.
-   * Must implement the standard Storage API (`getItem`, `setItem`, `removeItem`).
+   * Must implement the standard Storage API (`getItem`, `setItem`).
    *
    * @throws {TypeError} Throws if `itemName` is not a string.
    * @throws {TypeError} Throws if `encryptFn` or `decryptFn` are defined but not functions.
@@ -89,14 +89,8 @@ export default class StorageManager {
     }
     this.decryptFn = decryptFn || ((value) => value)
 
-    if (
-      !storage ||
-      typeof storage.getItem !== 'function' ||
-      typeof storage.setItem !== 'function' ||
-      typeof storage.removeItem !== 'function'
-    ) {
+    if (!storage || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function')
       throw new TypeError('storage must implement the standard Storage API')
-    }
 
     /** @private @readonly */
     this.storage = storage
@@ -132,16 +126,9 @@ export default class StorageManager {
 
   /**
    * Resets the stored value to the default value.
-   * If no default value is defined, the item is removed from storage.
-   *
-   * @returns {*} The stored value after reset.
    */
   reset() {
-    if (this.defaultValue === undefined) {
-      this.storage.removeItem(this.itemName)
-      return (this.#value = undefined)
-    }
-    return (this.value = this.defaultValue)
+    this.value = this.defaultValue
   }
 
   /**
