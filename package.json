@@ -1,0 +1,46 @@
+{
+  "name": "storagemanager",
+  "version": "1.0.0",
+  "description": "A lightweight wrapper for localStorage with efficient caching, optional encryption and JSON support.",
+  "license": "MIT",
+  "author": "Khoeckman",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "exit 0",
+    "build:umd": "rollup -c"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.7",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-replace": "^6.0.2",
+    "husky": "^9.1.7",
+    "rollup": "^4.52.4",
+    "rollup-plugin-prettier": "^4.1.2"
+  },
+  "homepage": "https://github.com/Khoeckman/StorageManager#readme",
+  "bugs": {
+    "url": "https://github.com/Khoeckman/StorageManager/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Khoeckman/StorageManager.git"
+  },
+  "keywords": [
+    "localStorage",
+    "sessionStorage",
+    "Storage",
+    "utility",
+    "javascript",
+    "js",
+    "typescript",
+    "ts",
+    "ecmascript",
+    "es",
+    "browser",
+    "module",
+    "commonjs"
+  ]
+}
