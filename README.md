@@ -74,6 +74,20 @@ storage.reset()
 console.log(storage.value) // back to default value
 ```
 
+### Using the integrated TRA encryption algorithm
+
+Make it much more difficult for attackers to decipher what's inside e.g. `LocalStorage` than just using `btoa()` and `atob()`.
+
+```js
+import StorageManager from '@khoeckman/storagemanager'
+
+const storage = new StorageManager('userSettings', {
+  defaultValue: { theme: 'dark', language: 'en' },
+  encryptFn: (value) => TRA.encrypt(value, 64),
+  decryptFn: (value) => TRA.decrypt(value, 64),
+})
+```
+
 ---
 
 ## API
@@ -120,7 +134,10 @@ const storage = new StorageManager<Settings>('userSettings', {
 })
 
 storage.value.theme = 'light' // type-safe
+console.log(storage.value.theme) // 'light'
+
 const current = storage.getItem() // properly typed
+console.log(current.theme) // 'light'
 ```
 
 ---
