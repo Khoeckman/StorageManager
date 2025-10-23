@@ -30,7 +30,7 @@ declare class LocalStorageManager<T = any> {
    * Defaults to an identity function.
    * @private
    */
-  private readonly decryptFn: (value: string | null) => string
+  private readonly decryptFn: (value: string) => string
 
   /**
    * The underlying storage backend (defaults to `window.localStorage`).
@@ -56,7 +56,7 @@ declare class LocalStorageManager<T = any> {
     options?: {
       defaultValue?: T
       encryptFn?: (value: string) => string
-      decryptFn?: (value: string | null) => string
+      decryptFn?: (value: string) => string
       storage?: Storage
     }
   )
