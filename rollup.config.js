@@ -7,8 +7,15 @@ import dts from 'rollup-plugin-dts'
 
 const jsConfig = {
   input: 'src/index.mjs',
+  external: ['./src/TRA/TRA.mjs'],
   output: [
-    { file: 'dist/index.umd.js', format: 'umd', name: 'StorageManager', exports: 'named' },
+    {
+      file: 'dist/index.umd.js',
+      format: 'umd',
+      name: 'StorageManager',
+      exports: 'named',
+      globals: { './src/TRA/TRA.mjs': 'TRA' },
+    },
     { file: 'dist/index.mjs', format: 'es' },
     { file: 'dist/index.cjs', format: 'cjs', exports: 'named' },
   ],
@@ -42,4 +49,10 @@ const dtsConfig = {
   plugins: [dts()],
 }
 
-export default [jsConfig, dtsConfig]
+const dtsTRAConfig = {
+  input: 'src/TRA/TRA.d.ts',
+  output: [{ file: 'dist/TRA/TRA.d.ts', format: 'es' }],
+  plugins: [dts()],
+}
+
+export default [jsConfig, dtsConfig, dtsTRAConfig]
