@@ -43,7 +43,7 @@ import TRA from './TRA/TRA.js'
  *
  * @source https://github.com/Khoeckman/StorageManager
  */
-export default class StorageManager {
+class StorageManager {
   static version = __VERSION__
 
   #value
@@ -125,13 +125,6 @@ export default class StorageManager {
   }
 
   /**
-   * Resets the stored value to the default value.
-   */
-  reset() {
-    this.value = this.defaultValue
-  }
-
-  /**
    * Retrieves and synchronizes the internal cache with the latest stored value.
    *
    * This method reads the raw value from the underlying storage, applies decryption
@@ -149,4 +142,14 @@ export default class StorageManager {
     value = this.decryptFn(value)
     return (this.#value = value.startsWith('\0') ? JSON.parse(value.slice(1)) : value)
   }
+
+  /**
+   * Resets the stored value to the default value.
+   */
+  reset() {
+    this.value = this.defaultValue
+  }
 }
+
+export { TRA }
+export default StorageManager

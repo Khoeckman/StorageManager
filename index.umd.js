@@ -1,11 +1,11 @@
 ;(function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined'
-    ? (module.exports = factory())
+    ? factory(exports)
     : typeof define === 'function' && define.amd
-      ? define(factory)
+      ? define(['exports'], factory)
       : ((global = typeof globalThis !== 'undefined' ? globalThis : global || self),
-        (global.StorageManager = factory()))
-})(this, function () {
+        factory((global.StorageManager = {})))
+})(this, function (exports) {
   'use strict'
 
   /**
@@ -285,7 +285,7 @@
    * @source https://github.com/Khoeckman/StorageManager
    */
   class StorageManager {
-    static version = '1.0.3'
+    static version = '1.1.0'
 
     #value
 
@@ -366,13 +366,6 @@
     }
 
     /**
-     * Resets the stored value to the default value.
-     */
-    reset() {
-      this.value = this.defaultValue
-    }
-
-    /**
      * Retrieves and synchronizes the internal cache with the latest stored value.
      *
      * This method reads the raw value from the underlying storage, applies decryption
@@ -390,7 +383,17 @@
       value = this.decryptFn(value)
       return (this.#value = value.startsWith('\0') ? JSON.parse(value.slice(1)) : value)
     }
+
+    /**
+     * Resets the stored value to the default value.
+     */
+    reset() {
+      this.value = this.defaultValue
+    }
   }
 
-  return StorageManager
+  exports.TRA = TRA
+  exports.default = StorageManager
+
+  Object.defineProperty(exports, '__esModule', { value: true })
 })
