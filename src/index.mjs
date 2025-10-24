@@ -67,7 +67,12 @@ class StorageManager {
    */
   constructor(
     itemName,
-    { defaultValue, encryptFn = TRA.encrypt, decryptFn = TRA.decrypt, storage = window.localStorage } = {}
+    {
+      defaultValue,
+      encryptFn = (value) => TRA.encrypt(value, 64),
+      decryptFn = (value) => TRA.decrypt(value, 64),
+      storage = window.localStorage,
+    } = {}
   ) {
     if (typeof itemName !== 'string') {
       throw new TypeError('itemName is not a string')

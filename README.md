@@ -86,8 +86,8 @@ import TRA from '@khoeckman/storagemanager/TRA'
 
 const storage = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
-  encryptFn: TRA.encrypt, // shorthand for `(value) => TRA.encrypt(value, 64)`
-  decryptFn: TRA.decrypt, // shorthand for `(value) => TRA.decrypt(value, 64)`
+  encryptFn: (value) => TRA.encrypt(value, 64),
+  decryptFn: (value) => TRA.decrypt(value, 64),
 })
 ```
 

@@ -47,7 +47,7 @@ export default class TRA {
    */
   static encrypt(string, radix) {
     let uint8Array = new TextEncoder().encode(string)
-    uint8Array = this.#rotate(uint8Array, 1)
+    uint8Array = TRA.#rotate(uint8Array, 1)
     return ByteArrayConverter.encodeByteArrayToString(uint8Array, radix)
   }
 
@@ -69,7 +69,7 @@ export default class TRA {
    */
   static decrypt(string, radix) {
     let uint8Array = ByteArrayConverter.decodeStringToByteArray(string, radix)
-    uint8Array = this.#rotate(uint8Array, -1)
+    uint8Array = TRA.#rotate(uint8Array, -1)
     return new TextDecoder().decode(uint8Array)
   }
 

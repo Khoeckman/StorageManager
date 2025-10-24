@@ -156,7 +156,7 @@ class TRA {
    */
   static encrypt(string, radix) {
     let uint8Array = new TextEncoder().encode(string)
-    uint8Array = this.#rotate(uint8Array, 1)
+    uint8Array = TRA.#rotate(uint8Array, 1)
     return ByteArrayConverter.encodeByteArrayToString(uint8Array, radix)
   }
 
@@ -178,7 +178,7 @@ class TRA {
    */
   static decrypt(string, radix) {
     let uint8Array = ByteArrayConverter.decodeStringToByteArray(string, radix)
-    uint8Array = this.#rotate(uint8Array, -1)
+    uint8Array = TRA.#rotate(uint8Array, -1)
     return new TextDecoder().decode(uint8Array)
   }
 
@@ -275,7 +275,7 @@ class TRA {
  * @source https://github.com/Khoeckman/StorageManager
  */
 class StorageManager {
-  static version = '1.5.1'
+  static version = '1.6.0'
 
   #value
 
@@ -298,7 +298,12 @@ class StorageManager {
    */
   constructor(
     itemName,
-    { defaultValue, encryptFn = TRA.encrypt, decryptFn = TRA.decrypt, storage = window.localStorage } = {}
+    {
+      defaultValue,
+      encryptFn = (value) => TRA.encrypt(value, 64),
+      decryptFn = (value) => TRA.decrypt(value, 64),
+      storage = window.localStorage,
+    } = {}
   ) {
     if (typeof itemName !== 'string') {
       throw new TypeError('itemName is not a string')
