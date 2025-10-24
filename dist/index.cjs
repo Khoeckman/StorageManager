@@ -279,7 +279,7 @@ class TRA {
  * @source https://github.com/Khoeckman/StorageManager
  */
 class StorageManager {
-  static version = '1.5.0'
+  static version = '1.5.1'
 
   #value
 
