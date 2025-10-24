@@ -5,7 +5,7 @@
  *
  * It keeps a private cached value (`#value`) for fast access via `.value`.
  */
-declare class LocalStorageManager<T = any> {
+declare class StorageManager<T = any> {
   /**
    * The key name under which the data is stored.
    * @readonly
@@ -46,7 +46,7 @@ declare class LocalStorageManager<T = any> {
   #value?: T
 
   /**
-   * Creates a new LocalStorageManager instance.
+   * Creates a new StorageManager instance.
    *
    * @param itemName - The key name under which the data is stored.
    * @param options - Optional configuration.
@@ -90,5 +90,5 @@ declare class LocalStorageManager<T = any> {
   getItem(): T
 }
 
-export = LocalStorageManager
-export as namespace LocalStorageManager
+export = StorageManager
+export as namespace StorageManager
