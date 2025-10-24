@@ -3,8 +3,9 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import replace from '@rollup/plugin-replace'
 import prettier from 'rollup-plugin-prettier'
+import dts from 'rollup-plugin-dts'
 
-export default {
+const jsConfig = {
   input: 'src/index.mjs',
   output: [
     { file: 'dist/index.umd.js', format: 'umd', name: 'StorageManager', exports: 'named' },
@@ -34,3 +35,11 @@ export default {
     }),
   ],
 }
+
+const dtsConfig = {
+  input: 'src/index.d.ts',
+  output: [{ file: 'dist/index.d.ts', format: 'es' }],
+  plugins: [dts()],
+}
+
+export default [jsConfig, dtsConfig]
