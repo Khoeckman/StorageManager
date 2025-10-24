@@ -81,7 +81,8 @@ If you want to make stored data significantly harder to reverse-engineer than wi
 This is also the **default behavior**, if you don't specify your own encryption or decryption functions, `StorageManager` automatically uses `TRA.encrypt` and `TRA.decrypt` internally.
 
 ```js
-import StorageManager, { TRA } from '@khoeckman/storagemanager'
+import StorageManager from '@khoeckman/storagemanager'
+import TRA from '@khoeckman/storagemanager/TRA'
 
 const storage = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },

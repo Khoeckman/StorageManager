@@ -1,11 +1,11 @@
 ;(function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined'
-    ? factory(exports)
+    ? (module.exports = factory())
     : typeof define === 'function' && define.amd
-      ? define(['exports'], factory)
+      ? define(factory)
       : ((global = typeof globalThis !== 'undefined' ? globalThis : global || self),
-        factory((global.StorageManager = {})))
-})(this, function (exports) {
+        (global.StorageManager = factory()))
+})(this, function () {
   'use strict'
 
   /**
@@ -392,8 +392,5 @@
     }
   }
 
-  exports.TRA = TRA
-  exports.default = StorageManager
-
-  Object.defineProperty(exports, '__esModule', { value: true })
+  return StorageManager
 })

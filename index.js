@@ -151,5 +151,4 @@ class StorageManager {
   }
 }
 
-export { TRA }
 export default StorageManager
