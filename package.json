@@ -1,6 +1,6 @@
 {
   "name": "@khoeckman/storagemanager",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "A lightweight wrapper for Storage-like interfaces with efficient caching, out-of-the-box encryption and JSON support.",
   "license": "MIT",
   "author": "Khoeckman",
