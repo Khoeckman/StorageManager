@@ -1,4 +1,4 @@
-import ByteArrayConverter from './ByteArrayConverter.js'
+import ByteArrayConverter from './ByteArrayConverter.mjs'
 
 /**
  * @class TRA - Text Rotation Algorithm

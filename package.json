@@ -1,6 +1,6 @@
 {
   "name": "@khoeckman/storagemanager",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "A lightweight wrapper for Storage-like interfaces with efficient caching, out-of-the-box encryption and JSON support.",
   "license": "MIT",
   "author": "Khoeckman",
@@ -11,13 +11,8 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.umd.js",
-      "default": "./dist/index.umd.js"
-    },
-    "./TRA": {
-      "import": "./src/TRA/TRA.js",
-      "require": "./src/TRA/TRA.js",
-      "default": "./src/TRA/TRA.js"
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.cjs"
     }
   },
   "scripts": {

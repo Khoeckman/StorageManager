@@ -5,23 +5,17 @@ import replace from '@rollup/plugin-replace'
 import prettier from 'rollup-plugin-prettier'
 
 export default {
-  input: 'src/index.js',
+  input: 'src/index.mjs',
   output: [
-    {
-      file: 'dist/index.umd.js',
-      format: 'umd',
-      name: 'StorageManager',
-    },
-    {
-      file: 'dist/index.mjs',
-      format: 'es',
-    },
+    { file: 'dist/index.umd.js', format: 'umd', name: 'StorageManager', exports: 'named' },
+    { file: 'dist/index.mjs', format: 'es' },
+    { file: 'dist/index.cjs', format: 'cjs', exports: 'named' },
   ],
   plugins: [
     resolve(),
     commonjs(),
     prettier({
-      parser: 'typescript',
+      parser: 'babel',
       printWidth: 120,
       tabWidth: 2,
       useTabs: false,

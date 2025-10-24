@@ -1,4 +1,4 @@
-import TRA from './TRA/TRA.js'
+import TRA from './TRA/TRA.mjs'
 
 /**
  * @class StorageManager
@@ -152,3 +152,4 @@ class StorageManager {
 }
 
 export default StorageManager
+export { TRA }

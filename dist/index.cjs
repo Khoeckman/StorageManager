@@ -1,3 +1,7 @@
+'use strict'
+
+Object.defineProperty(exports, '__esModule', { value: true })
+
 /**
  * @class ByteArrayConverter
  * @classdesc Utility class for converting between {@link Uint8Array} and
@@ -382,4 +386,5 @@ class StorageManager {
   }
 }
 
-export { TRA, StorageManager as default }
+exports.TRA = TRA
+exports.default = StorageManager
