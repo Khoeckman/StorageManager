@@ -285,7 +285,7 @@
    * @source https://github.com/Khoeckman/StorageManager
    */
   class StorageManager {
-    static version = '1.6.1'
+    static version = '1.6.2'
 
     #value
 
