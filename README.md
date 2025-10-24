@@ -74,17 +74,32 @@ storage.reset()
 console.log(storage.value) // back to default value
 ```
 
-### Using the integrated TRA encryption algorithm
+### Using Stronger Encryption (TRA)
 
-Make it much more difficult for attackers to decipher what's inside e.g. `LocalStorage` than just using `btoa()` and `atob()`.
+If you want to make stored data significantly harder to reverse-engineer than with simple Base64 encoding (`btoa` / `atob`), you can integrate a stronger encryption method such as **TRA**.
+
+This is also the **default behavior**, if you don't specify your own encryption or decryption functions, `StorageManager` automatically uses `TRA.encrypt` and `TRA.decrypt` internally.
 
 ```js
-import StorageManager from '@khoeckman/storagemanager'
+import StorageManager, { TRA } from '@khoeckman/storagemanager'
 
 const storage = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
-  encryptFn: (value) => TRA.encrypt(value, 64),
-  decryptFn: (value) => TRA.decrypt(value, 64),
+  encryptFn: TRA.encrypt, // shorthand for `(value) => TRA.encrypt(value, 64)`
+  decryptFn: TRA.decrypt, // shorthand for `(value) => TRA.decrypt(value, 64)`
+})
+```
+
+### Disabling Encryption
+
+If you want to store data in plain text for performance or usability, simply pass a falsy value for `encryptFn` and `decryptFn`.  
+`StorageManager` will then fall back to identity functions (`(value) => value`).
+
+```js
+const storage = new StorageManager('userSettings', {
+  defaultValue: { theme: 'dark', language: 'en' },
+  encryptFn: null,
+  decryptFn: null,
 })
 ```
 
