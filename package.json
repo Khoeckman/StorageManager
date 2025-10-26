@@ -1,6 +1,6 @@
 {
   "name": "@khoeckman/storagemanager",
-  "version": "1.7.0",
+  "version": "3.0.0",
   "description": "A lightweight wrapper for Storage-like interfaces with efficient caching, out-of-the-box encryption and JSON support.",
   "license": "MIT",
   "author": "Khoeckman",
@@ -10,28 +10,31 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs",
-      "default": "./dist/index.umd.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./TRA": {
-      "import": "./src/TRA/TRA.mjs",
-      "default": "./src/TRA/TRA.mjs",
-      "types": "./dist/TRA/TRA.d.ts"
+      "default": "./dist/index.umd.js"
     }
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "test": "exit 0",
-    "build:umd": "rollup -c"
+    "build": "rollup -c && prettier --write \"dist/**/*.{js,mjs,cjs}\"",
+    "prepack": "npm update && npm run build"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.7",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^24.9.1",
+    "prettier": "^3.6.2",
     "rollup": "^4.52.4",
-    "rollup-plugin-dts": "^6.2.3",
-    "rollup-plugin-prettier": "^4.1.2",
+    "rollup-plugin-delete": "^3.0.1",
+    "tslib": "^2.8.1",
     "typescript": "^5.9.3"
   },
   "publishConfig": {
@@ -48,7 +51,7 @@
   "keywords": [
     "localStorage",
     "sessionStorage",
-    "Storage",
+    "storage",
     "utility",
     "javascript",
     "js",
@@ -56,7 +59,9 @@
     "ts",
     "ecmascript",
     "es",
+    "umd",
     "browser",
+    "client",
     "module",
     "commonjs"
   ]

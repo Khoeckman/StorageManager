@@ -1,13 +1,17 @@
 {
   "compilerOptions": {
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "outDir": "dist",
-    "allowJs": true,
-    "checkJs": false,
-    "esModuleInterop": true,
+    "target": "ESNext",
     "module": "ESNext",
-    "target": "ESNext"
+    "moduleResolution": "Bundler",
+    "declaration": true,
+    "declarationDir": "./dist",
+    "outDir": "./dist",
+    "emitDeclarationOnly": false,
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "sourceMap": false
   },
   "include": ["src"]
 }

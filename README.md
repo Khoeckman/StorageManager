@@ -37,20 +37,17 @@ yarn add @khoeckman/storagemanager
 ```js
 import StorageManager from '@khoeckman/storagemanager'
 
-const storage = new StorageManager('userSettings', {
+const userSettingsStorage = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
-  encryptFn: (value) => btoa(value), // optional encryption
-  decryptFn: (value) => atob(value), // optional decryption
+  encodeFn: (value) => btoa(value), // optional encoding
+  decodeFn: (value) => atob(value), // optional decoding
 })
 
-// Store and retrieve values
-storage.value = { theme: 'light' }
-console.log(storage.value) // { theme: 'light' }
+// Store a value
+userSettingsStorage.value = { theme: 'light' }
 
-// If the storage is modified externally:
-localStorage.setItem('userSettings', '{"theme":"blue"}')
-storage.getItem()
-console.log(storage.value) // { theme: 'blue' }
+// After reloading the page:
+console.log(userSettingsStorage.value) // { theme: 'light' }
 ```
 
 ### Using Custom Storage
@@ -74,7 +71,7 @@ storage.reset()
 console.log(storage.value) // back to default value
 ```
 
-### Using Stronger Encryption (TRA)
+### Encrypting (TRA)
 
 If you want to make stored data significantly harder to reverse-engineer than with simple Base64 encoding (`btoa` / `atob`), you can integrate a stronger encryption method such as **TRA**.
 
@@ -91,7 +88,7 @@ const storage = new StorageManager('userSettings', {
 })
 ```
 
-### Disabling Encryption
+### Disabling Encoding
 
 If you want to store data in plain text for performance or usability, simply pass a falsy value for `encryptFn` and `decryptFn`.  
 `StorageManager` will then fall back to identity functions (`(value) => value`).
@@ -102,6 +99,16 @@ const storage = new StorageManager('userSettings', {
   encryptFn: null,
   decryptFn: null,
 })
+```
+
+### External changes
+
+When the `Storage` is modified externally, it is required to run `getItem()` to sync the value.
+
+```js
+localStorage.setItem('userSettings', '{"theme":"blue"}')
+storage.getItem((value) => JSON.parse(value)) // custom decode function
+console.log(storage.value) // { theme: 'blue' }
 ```
 
 ---

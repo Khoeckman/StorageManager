@@ -1,58 +1,41 @@
 import pkg from './package.json' with { type: 'json' }
+import del from 'rollup-plugin-delete'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
+import typescript from '@rollup/plugin-typescript'
 import replace from '@rollup/plugin-replace'
-import prettier from 'rollup-plugin-prettier'
-import dts from 'rollup-plugin-dts'
+import terser from '@rollup/plugin-terser'
 
-const jsConfig = {
-  input: 'src/index.mjs',
-  external: ['./src/TRA/TRA.mjs'],
+export default {
+  input: 'src/index.ts',
   output: [
     {
       file: 'dist/index.umd.js',
       format: 'umd',
       name: 'StorageManager',
       exports: 'named',
-      globals: { './src/TRA/TRA.mjs': 'TRA' },
     },
     { file: 'dist/index.mjs', format: 'es' },
     { file: 'dist/index.cjs', format: 'cjs', exports: 'named' },
   ],
   plugins: [
-    resolve(),
-    commonjs(),
-    prettier({
-      parser: 'babel',
-      printWidth: 120,
-      tabWidth: 2,
-      useTabs: false,
-      singleQuote: true,
-      semi: false,
-      trailingComma: 'es5',
-      arrowParens: 'always',
-      htmlWhitespaceSensitivity: 'css',
-      singleAttributePerLine: false,
-      bracketSameLine: true,
-      endOfLine: 'lf',
-    }),
+    del({ targets: 'dist/*' }),
+    resolve({ extensions: ['.ts', '.json'] }),
     replace({
       preventAssignment: true,
       __VERSION__: JSON.stringify(pkg.version),
     }),
+    typescript({ tsconfig: './tsconfig.json' }),
+    commonjs(),
+    terser({
+      maxWorkers: 16,
+      compress: false,
+      mangle: false,
+      format: {
+        beautify: true,
+        indent_level: 2,
+        comments: false,
+      },
+    }),
   ],
 }
-
-const dtsConfig = {
-  input: 'src/index.d.ts',
-  output: [{ file: 'dist/index.d.ts', format: 'es' }],
-  plugins: [dts()],
-}
-
-const dtsTRAConfig = {
-  input: 'src/TRA/TRA.d.ts',
-  output: [{ file: 'dist/TRA/TRA.d.ts', format: 'es' }],
-  plugins: [dts()],
-}
-
-export default [jsConfig, dtsConfig, dtsTRAConfig]

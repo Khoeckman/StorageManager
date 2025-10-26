@@ -1,3 +1,11 @@
+/* prettier-ignore*/
+export type Radix =
+        2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 |
+  11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 |
+  21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+  31 | 32 | 33 | 34 | 35 | 36 |
+  64;
+
 /**
  * @class ByteArrayConverter
  * @classdesc Utility class for converting between {@link Uint8Array} and
@@ -13,7 +21,6 @@
  *
  * @license Copyright (c) 2025 Kyle Hoeckman, All rights reserved.
  */
-
 export default class ByteArrayConverter {
   /**
    * Encodes a byte array into a string using the given radix.
@@ -37,11 +44,13 @@ export default class ByteArrayConverter {
    * // "0fff80"
    * ```
    */
-  static encodeByteArrayToString(byteArray, radix) {
+  static encodeByteArrayToString(byteArray: Uint8Array | number[], radix: Radix): string {
     if (!Array.isArray(byteArray) && !(byteArray instanceof Uint8Array))
       throw new TypeError('encodedString is neither an Array nor Uint8Array')
     if (!Number.isInteger(radix)) throw new TypeError('radix is not an integer')
     if ((radix < 2 || radix > 36) && radix !== 64) throw new RangeError('radix is not between 2 and 36 or 64')
+
+    if (!(byteArray instanceof Uint8Array)) byteArray = new Uint8Array(byteArray)
 
     if (radix === 64) {
       if (typeof btoa === 'undefined') return Buffer.from(byteArray).toString('base64')
@@ -50,7 +59,7 @@ export default class ByteArrayConverter {
       const chunk = 0x8000 // 32k chunks to avoid arg limit
 
       for (let i = 0; i < byteArray.length; i += chunk)
-        binary += String.fromCharCode.apply(null, byteArray.subarray(i, i + chunk))
+        binary += String.fromCharCode(...byteArray.subarray(i, i + chunk))
 
       return btoa(binary)
     }
@@ -84,7 +93,7 @@ export default class ByteArrayConverter {
    * // Uint8Array [15, 255, 128]
    * ```
    */
-  static decodeStringToByteArray(encodedString, radix) {
+  static decodeStringToByteArray(encodedString: string, radix: Radix): Uint8Array {
     if (typeof encodedString !== 'string') throw new TypeError('encodedString is not a string')
     if (!Number.isInteger(radix)) throw new TypeError('radix is not an integer')
     if ((radix < 2 || radix > 36) && radix !== 64) throw new RangeError('radix is not between 2 and 36 or 64')

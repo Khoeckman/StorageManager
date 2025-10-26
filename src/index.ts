@@ -1,0 +1,153 @@
+import TRA from './TRA/TRA'
+
+declare const __VERSION__: string
+
+/**
+ * @class StorageManager
+ * @classdesc A lightweight and efficient wrapper for managing data in a Storage-like interface
+ * (defaulting to {@link window.localStorage}), with optional encoding and decoding support.
+ * Automatically initializes with its default value if none is present.
+ *
+ * This class includes an internal cache (`#value`) to improve performance.
+ * Using the {@link StorageManager.value|value} getter is significantly faster
+ * than reading from storage repeatedly. However, if the stored value is modified
+ * externally (e.g., via {@link Storage.setItem} or the browser console),
+ * the cached value will become outdated.
+ *
+ * To re-synchronize the cache with the actual stored value, call
+ * {@link StorageManager.getItem|getItem()}.
+ *
+ * @example
+ * const storage = new StorageManager('userSettings', {
+ *   defaultValue: { theme: 'dark', language: 'en' },
+ *   encodeFn: (value) => btoa(value),  // optional encoding
+ *   decodeFn: (value) => atob(value),  // optional decoding
+ * });
+ *
+ * storage.value = { theme: 'light' };   // stores encoded and cached
+ * console.log(storage.value);           // fast access from memory cache
+ *
+ * @example
+ * const sessionStore = new StorageManager('tempData', {
+ *   storage: window.sessionStorage,
+ *   defaultValue: 'none',
+ * });
+ * sessionStore.value = 'temporary';
+ *
+ * @source https://github.com/Khoeckman/StorageManager
+ */
+class StorageManager<T> {
+  /** Version of the library, injected via Rollup replace plugin. */
+  static version: string = __VERSION__
+
+  /** Key name under which the data is stored. */
+  readonly itemName: string
+
+  /** Default value used when the key does not exist in storage. */
+  private readonly defaultValue?: T
+
+  /** Function to encode values before storing. Defaults to TRA.encrypt with radix 64. */
+  private readonly encodeFn: (value: string) => string
+
+  /** Function to decode values when reading. Defaults to TRA.decrypt with radix 64. */
+  private readonly decodeFn: (value: string) => string
+
+  /** The underlying storage backend (defaults to `window.localStorage`). */
+  readonly storage: Storage
+
+  /** Internal cached value to improve access speed. */
+  #value?: T
+
+  /**
+   * Creates a new StorageManager instance.
+   *
+   * @param {string} itemName - The key name under which the data will be stored.
+   * @param {Object} [options={}] - Optional configuration parameters.
+   * @param {T} [options.defaultValue] - Default value if the key does not exist.
+   * @param {(value: string) => string} [options.encodeFn] - Optional function to encode stored values.
+   * @param {(value: string) => string} [options.decodeFn] - Optional function to decode stored values.
+   * @param {Storage} [options.storage=window.localStorage] - Optional custom storage backend.
+   *
+   * @throws {TypeError} If `itemName` is not a string.
+   * @throws {TypeError} If `encodeFn` or `decodeFn` are defined but not functions.
+   * @throws {TypeError} If `storage` does not implement the standard Storage API.
+   */
+  constructor(
+    itemName: string,
+    options: {
+      defaultValue?: T
+      encodeFn?: (value: string) => string
+      decodeFn?: (value: string) => string
+      storage?: Storage
+    } = {}
+  ) {
+    const {
+      defaultValue,
+      encodeFn = (value: string) => TRA.encrypt(value, 64),
+      decodeFn = (value: string) => TRA.decrypt(value, 64),
+      storage = window.localStorage,
+    } = options
+
+    if (typeof itemName !== 'string') throw new TypeError('itemName is not a string')
+    this.itemName = itemName
+    this.defaultValue = defaultValue
+
+    if (encodeFn && typeof encodeFn !== 'function') throw new TypeError('encodeFn is defined but is not a function')
+    this.encodeFn = encodeFn || ((v) => v)
+
+    if (decodeFn && typeof decodeFn !== 'function') throw new TypeError('decodeFn is defined but is not a function')
+    this.decodeFn = decodeFn || ((v) => v)
+
+    if (!storage || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function')
+      throw new TypeError('storage must implement the standard Storage API')
+    this.storage = storage
+
+    // Initialize if missing
+    if (this.getItem() === undefined) this.reset()
+  }
+
+  /**
+   * Sets the current value in storage.
+   * Automatically encodes and caches the value.
+   *
+   * @param {T | undefined} value - The value to store. Objects are automatically stringified.
+   */
+  set value(value: T | undefined) {
+    this.#value = value
+    const stringValue = typeof value === 'string' ? value : '\0JSON\0\x20' + JSON.stringify(value)
+    this.storage.setItem(this.itemName, this.encodeFn(stringValue))
+  }
+
+  /**
+   * Gets the current cached value.
+   *
+   * @returns {T | undefined} The cached value.
+   */
+  get value(): T | undefined {
+    return this.#value
+  }
+
+  /**
+   * Retrieves and synchronizes the internal cache with the latest stored value.
+   *
+   * Applies decoding (either custom `decodeFn` or instance's `decodeFn`) and parses JSON values.
+   *
+   * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional function to decode the raw stored string.
+   * @returns {T | undefined} The actual value from storage, or the default value if none exists.
+   */
+  getItem(decodeFn: (value: string) => string = this.decodeFn): T | undefined {
+    let value = this.storage.getItem(this.itemName)
+    if (typeof value !== 'string') return (this.#value = value ?? this.defaultValue)
+    value = decodeFn(value)
+    return (this.#value = value.startsWith('\0JSON\0\x20') ? JSON.parse(value.slice(7)) : value)
+  }
+
+  /** Resets the stored value to the default value. */
+  reset(): T | undefined {
+    return (this.value = this.defaultValue)
+  }
+}
+
+export default StorageManager
+export { default as TRA } from './TRA/TRA'
+export { default as ByteArrayConverter } from './TRA/ByteArrayConverter'
