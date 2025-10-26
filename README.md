@@ -10,7 +10,7 @@ A lightweight wrapper for Storage-like interfaces (e.g., `localStorage` or `sess
 ## Features
 
 - ⚡ **Fast caching**: memory cache avoids repeated storage reads.
-- 🔒 **Optional encryption/decryption** hooks.
+- 🔒 **Optional encoding/decoding** hooks.
 - 🧩 **JSON support**: automatically serializes and parses objects.
 - 🌐 **Custom storage**: works with any object implementing the standard Storage API.
 - 🔄 **Sync with external changes**: `getItem()` ensures the cache reflects the actual stored value.
@@ -73,33 +73,40 @@ console.log(storage.value) // back to default value
 
 ### Encrypting (TRA)
 
-If you want to make stored data significantly harder to reverse-engineer than with simple Base64 encoding (`btoa` / `atob`), you can integrate a stronger encryption method such as **TRA**.
+If you want to make stored data significantly harder to reverse-engineer than with simple Base64 encoding (`btoa` / `atob`), you can use encryption methods such as **TRA** for the encoding and decoding functions.
 
-This is also the **default behavior**, if you don't specify your own encryption or decryption functions, `StorageManager` automatically uses `TRA.encrypt` and `TRA.decrypt` internally.
+This is also the **default behavior**, if you don't specify your own encoding or decoding functions, `StorageManager` automatically uses `TRA.encrypt` and `TRA.decrypt` internally.
 
 ```js
-import StorageManager from '@khoeckman/storagemanager'
-import TRA from '@khoeckman/storagemanager/TRA'
+import StorageManager, { TRA } from '@khoeckman/storagemanager'
 
 const storage = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
-  encryptFn: (value) => TRA.encrypt(value, 64),
-  decryptFn: (value) => TRA.decrypt(value, 64),
+  encodeFn: (value) => TRA.encrypt(value, 64),
+  decodeFn: (value) => TRA.decrypt(value, 64),
 })
 ```
 
 ### Disabling Encoding
 
-If you want to store data in plain text for performance or usability, simply pass a falsy value for `encryptFn` and `decryptFn`.  
-`StorageManager` will then fall back to identity functions (`(value) => value`).
+If you want to store values **as plain text**, without encryption or transformation, you can disable the encoding and decoding functions by passing a falsy value (like `null` or `undefined`) for `encodeFn` and `decodeFn`.
+
+`StorageManager` will automatically fall back to **identity functions** (`value => value`), which means the data is written and read exactly as-is.
+
+> ⚠️ Note: Objects are still automatically stringified. In that case, the stored string will be prefixed with `\0JSON\0 ` to mark it as JSON. This allows `StorageManager` to correctly parse it back into an object when retrieved.
 
 ```js
 const storage = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
-  encryptFn: null,
-  decryptFn: null,
+  encodeFn: null, // disables encoding
+  decodeFn: null, // disables decoding
 })
+
+storage.value = { theme: 'light' }
+console.log(storage.value) // returns the object from cache
 ```
+
+This is useful for **performance reasons** or when you want your data to be **readable directly in storage**.
 
 ### External changes
 
@@ -120,25 +127,27 @@ console.log(storage.value) // { theme: 'blue' }
 - **itemName**: `string` — key under which the data is stored.
 - **options** (optional):
   - `defaultValue` — default value if none exists.
-  - `encryptFn` — function to encrypt values before saving.
-  - `decryptFn` — function to decrypt values when reading.
+  - `encodeFn` — function to encode values before saving.
+  - `decodeFn` — function to decode values when reading.
   - `storage` — custom storage object implementing `getItem` and `setItem`.
 
 ### `value`
 
 - **Getter**: returns the cached value (fast).
-- **Setter**: sets and caches the value, encrypting and serializing if needed.
+- **Setter**: sets and caches the value, encoding and serializing if needed.
 
-### `getItem()`
+### `getItem(decodeFn)`
 
+- **decodeFn** — function to decode values when reading, defaults to `this.decodeFn`.
 - Reads the value from storage.
-- Decrypts and parses JSON-encoded objects.
+- Decodes and parses JSON-encoded objects.
 - Updates the internal cache.
 - Returns the actual stored value or default if missing.
 
 ### `reset()`
 
 - Resets the value to the default.
+- Returns the new value.
 
 ---
 
