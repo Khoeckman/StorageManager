@@ -108,15 +108,23 @@ console.log(storage.value) // returns the object from cache
 
 This is useful for **performance reasons** or when you want your data to be **readable directly in storage**.
 
-### External changes
+### Handling External Changes
 
-When the `Storage` is modified externally, it is required to run `getItem()` to sync the value.
+If the underlying `Storage` (e.g., `localStorage` or `sessionStorage`) is modified outside of `StorageManager`, the internal cache will **not automatically update**.
+
+To synchronize the cached value with the latest stored data, call `getItem()`. You can also provide a **custom decode function** if needed.
 
 ```js
+// External change to storage (not recommended)
 localStorage.setItem('userSettings', '{"theme":"blue"}')
-storage.getItem((value) => JSON.parse(value)) // custom decode function
+
+// Resynchronize the cache, optionally with a custom decoder
+storage.getItem((value) => JSON.parse(value))
+
 console.log(storage.value) // { theme: 'blue' }
 ```
+
+This ensures that the `StorageManager` instance always reflects the current state of the storage.
 
 ---
 
