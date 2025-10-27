@@ -195,7 +195,9 @@ This ensures that the `StorageManager` instance reflects the current state of th
 - Returns `true` if the current value matches the default, otherwise `false`.
 
 ```js
-
+if (userStore.isDefault()) {
+  console.log('value is equal to default.')
+}
 ```
 
 ---
