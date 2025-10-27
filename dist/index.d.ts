@@ -1,3 +1,4 @@
+type StorageValue<T, HasDefault extends boolean> = HasDefault extends true ? T : T | undefined;
 /**
  * @class StorageManager
  * @classdesc A lightweight and efficient wrapper for managing data in a Storage-like interface
@@ -70,15 +71,15 @@ declare class StorageManager<T, HasDefault extends boolean = false> {
      * Sets the current value in storage.
      * Automatically encodes and caches the value.
      *
-     * @param {HasDefault extends true ? T : T | undefined} value - The value to store. Objects are automatically stringified.
+     * @param {StorageValue<T, HasDefault>} value - The value to store. Objects are automatically stringified.
      */
-    set value(value: HasDefault extends true ? T : T | undefined);
+    set value(value: StorageValue<T, HasDefault>);
     /**
      * Gets the current cached value.
      *
-     * @returns {T | undefined} The cached value.
+     * @returns {StorageValue<T, HasDefault>} The cached value.
      */
-    get value(): HasDefault extends true ? T : T | undefined;
+    get value(): StorageValue<T, HasDefault>;
     /**
      * Retrieves and synchronizes the internal cache (`value`) with the latest stored value.
      *
@@ -86,35 +87,31 @@ declare class StorageManager<T, HasDefault extends boolean = false> {
      * and automatically parses JSON-formatted values that were stored by this class.
      *
      * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional custom decoding function for the raw stored string.
-     * @returns {T | undefined} The actual decoded and parsed value from storage, or the default value if none exists.
+     * @returns {StorageValue<T, HasDefault>} The actual decoded and parsed value from storage, or the default value if none exists.
      *
      * @example
      * storage.sync()
      * console.log(storage.value) // Cached value is now up to date with storage
      */
-    sync(decodeFn?: (value: string) => string): HasDefault extends true ? T : T | undefined;
+    sync(decodeFn?: (value: string) => string): StorageValue<T, HasDefault>;
     /**
      * Resets the stored value to its configured default.
      *
      * Updates both the underlying storage and the internal cache.
      *
-     * @returns {T | undefined} The restored default value.
+     * @returns {StorageValue<T, HasDefault>} The restored default value.
      *
      * @example
      * storage.reset()
      * console.log(storage.value) // Default value
      */
-    reset(): HasDefault extends true ? T : T | undefined;
+    reset(): StorageValue<T, HasDefault>;
     /**
      * Removes this specific key and its value from storage.
      *
      * Also clears the internal cache to prevent stale data access.
      *
      * @returns {void}
-     *
-     * @example
-     * storage.remove()
-     * console.log(storage.value) // undefined
      */
     remove(): void;
     /**

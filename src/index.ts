@@ -2,6 +2,8 @@ import TRA from './TRA/TRA'
 
 declare const __VERSION__: string
 
+type StorageValue<T, HasDefault extends boolean> = HasDefault extends true ? T : T | undefined
+
 /**
  * @class StorageManager
  * @classdesc A lightweight and efficient wrapper for managing data in a Storage-like interface
@@ -36,6 +38,7 @@ declare const __VERSION__: string
  *
  * @source https://github.com/Khoeckman/StorageManager
  */
+
 class StorageManager<T, HasDefault extends boolean = false> {
   /** Version of the library, injected via Rollup replace plugin. */
   static version: string = __VERSION__
@@ -108,9 +111,9 @@ class StorageManager<T, HasDefault extends boolean = false> {
    * Sets the current value in storage.
    * Automatically encodes and caches the value.
    *
-   * @param {HasDefault extends true ? T : T | undefined} value - The value to store. Objects are automatically stringified.
+   * @param {StorageValue<T, HasDefault>} value - The value to store. Objects are automatically stringified.
    */
-  set value(value: HasDefault extends true ? T : T | undefined) {
+  set value(value: StorageValue<T, HasDefault>) {
     this.#value = value
     const stringValue = typeof value === 'string' ? value : '\0JSON\0\x20' + JSON.stringify(value)
     this.storage.setItem(this.itemName, this.encodeFn(stringValue))
@@ -119,10 +122,10 @@ class StorageManager<T, HasDefault extends boolean = false> {
   /**
    * Gets the current cached value.
    *
-   * @returns {T | undefined} The cached value.
+   * @returns {StorageValue<T, HasDefault>} The cached value.
    */
-  get value(): HasDefault extends true ? T : T | undefined {
-    return this.#value ?? (this.defaultValue as HasDefault extends true ? T : T | undefined)
+  get value(): StorageValue<T, HasDefault> {
+    return this.#value ?? (this.defaultValue as StorageValue<T, HasDefault>)
   }
 
   /**
@@ -132,13 +135,13 @@ class StorageManager<T, HasDefault extends boolean = false> {
    * and automatically parses JSON-formatted values that were stored by this class.
    *
    * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional custom decoding function for the raw stored string.
-   * @returns {T | undefined} The actual decoded and parsed value from storage, or the default value if none exists.
+   * @returns {StorageValue<T, HasDefault>} The actual decoded and parsed value from storage, or the default value if none exists.
    *
    * @example
    * storage.sync()
    * console.log(storage.value) // Cached value is now up to date with storage
    */
-  sync(decodeFn: (value: string) => string = this.decodeFn): HasDefault extends true ? T : T | undefined {
+  sync(decodeFn: (value: string) => string = this.decodeFn): StorageValue<T, HasDefault> {
     let value = this.storage.getItem(this.itemName)
     if (typeof value !== 'string') return this.reset()
 
@@ -156,14 +159,14 @@ class StorageManager<T, HasDefault extends boolean = false> {
    *
    * Updates both the underlying storage and the internal cache.
    *
-   * @returns {T | undefined} The restored default value.
+   * @returns {StorageValue<T, HasDefault>} The restored default value.
    *
    * @example
    * storage.reset()
    * console.log(storage.value) // Default value
    */
-  reset(): HasDefault extends true ? T : T | undefined {
-    return (this.value = this.defaultValue as HasDefault extends true ? T : T | undefined)
+  reset(): StorageValue<T, HasDefault> {
+    return (this.value = this.defaultValue as StorageValue<T, HasDefault>)
   }
 
   /**
@@ -172,10 +175,6 @@ class StorageManager<T, HasDefault extends boolean = false> {
    * Also clears the internal cache to prevent stale data access.
    *
    * @returns {void}
-   *
-   * @example
-   * storage.remove()
-   * console.log(storage.value) // undefined
    */
   remove(): void {
     this.#value = undefined
