@@ -3,6 +3,8 @@
 A lightweight wrapper for Storage-like interfaces (e.g., `localStorage` or `sessionStorage`) with **efficient caching**, **out-of-the-box encryption**, and **JSON support**. Perfect for fast, type-safe, and flexible client-side data management.
 
 [![npm version](https://img.shields.io/npm/v/@khoeckman/storagemanager.svg)](https://www.npmjs.com/package/@khoeckman/storagemanager)
+[![npm downloads](https://img.shields.io/npm/dt/@khoeckman/storagemanager.svg)](https://www.npmjs.com/package/@khoeckman/storagemanager)
+[![jsDelivr](https://data.jsdelivr.com/v1/package/npm/@khoeckman/storagemanager/badge)](https://www.jsdelivr.com/package/npm/@khoeckman/storagemanager)
 [![License](https://img.shields.io/npm/l/@khoeckman/storagemanager.svg)](LICENSE)
 
 ---

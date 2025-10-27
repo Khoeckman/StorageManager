@@ -75,7 +75,7 @@ class TRA {
 }
 
 class StorageManager {
-  static version = '4.0.2'
+  static version = '4.0.3'
   itemName
   defaultValue
   encodeFn
