@@ -80,16 +80,60 @@ declare class StorageManager<T> {
      */
     get value(): T | undefined;
     /**
-     * Retrieves and synchronizes the internal cache with the latest stored value.
+     * Retrieves and synchronizes the internal cache (`value`) with the latest stored value.
      *
-     * Applies decoding (either custom `decodeFn` or instance's `decodeFn`) and parses JSON values.
+     * Applies decoding (using the provided `decodeFn` or the instance's default)
+     * and automatically parses JSON-formatted values that were stored by this class.
      *
-     * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional function to decode the raw stored string.
-     * @returns {T | undefined} The actual value from storage, or the default value if none exists.
+     * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional custom decoding function for the raw stored string.
+     * @returns {T | undefined} The actual decoded and parsed value from storage, or the default value if none exists.
+     *
+     * @example
+     * storage.sync()
+     * console.log(storage.value) // Cached value is now up to date with storage
      */
-    getItem(decodeFn?: (value: string) => string): T | undefined;
-    /** Resets the stored value to the default value. */
+    sync(decodeFn?: (value: string) => string): T | undefined;
+    /**
+     * Resets the stored value to its configured default.
+     *
+     * Updates both the underlying storage and the internal cache.
+     *
+     * @returns {T | undefined} The restored default value.
+     *
+     * @example
+     * storage.reset()
+     * console.log(storage.value) // Default value
+     */
     reset(): T | undefined;
+    /**
+     * Removes this specific key and its value from storage.
+     *
+     * Also clears the internal cache to prevent stale data access.
+     *
+     * @returns {void}
+     *
+     * @example
+     * storage.remove()
+     * console.log(storage.value) // undefined
+     */
+    remove(): void;
+    /**
+     * Clears **all** data from the associated storage backend.
+     *
+     * This affects every key in the storage instance, not just the one
+     * managed by this StorageManager.
+     *
+     * @returns {void}
+     */
+    clear(): void;
+    /**
+     * Checks whether the current cached value matches the configured default value.
+     *
+     * Uses reference comparison for objects and strict equality for primitives.
+     *
+     * @returns {boolean} `true` if the cached value equals the default value, otherwise `false`.
+     */
+    isDefault(): boolean;
 }
 export default StorageManager;
 export { default as TRA } from './TRA/TRA';

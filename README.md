@@ -13,7 +13,7 @@ A lightweight wrapper for Storage-like interfaces (e.g., `localStorage` or `sess
 - 🔒 **Optional encoding/decoding** hooks.
 - 🧩 **JSON support**: automatically serializes and parses objects.
 - 🌐 **Custom storage**: works with any object implementing the standard Storage API.
-- 🔄 **Sync with external changes**: `getItem()` ensures the cache reflects the actual stored value.
+- 🔄 **Sync with external changes**: `sync()` ensures the cache reflects the actual stored value.
 - 📝 **Default values** and reset functionality.
 
 ---
@@ -21,10 +21,13 @@ A lightweight wrapper for Storage-like interfaces (e.g., `localStorage` or `sess
 ## Installation
 
 ```bash
+# npm
 npm install @khoeckman/storagemanager
-# or
+
+# pnpm
 pnpm add @khoeckman/storagemanager
-# or
+
+# yarn
 yarn add @khoeckman/storagemanager
 ```
 
@@ -71,9 +74,18 @@ storage.reset()
 console.log(storage.value) // back to default value
 ```
 
+### Removing Values
+
+Uses `Storage.removeItem()` internally to remove the item from storage and sets the cached value to `undefined`.
+
+```js
+storage.remove()
+console.log(storage.value) // undefined
+```
+
 ### Encrypting (TRA)
 
-If you want to make stored data significantly harder to reverse-engineer than with simple Base64 encoding (`btoa` / `atob`), you can use encryption methods such as **TRA** for the encoding and decoding functions.
+If you want to make stored data significantly harder to reverse-engineer than with simple Base64 encoding (`btoa` / `atob`), you can use encryption methods such as **TRA** for `encodeFn` and `decodeFn`.
 
 This is also the **default behavior**, if you don't specify your own encoding or decoding functions, `StorageManager` automatically uses `TRA.encrypt` and `TRA.decrypt` internally.
 
@@ -82,18 +94,18 @@ import StorageManager, { TRA } from '@khoeckman/storagemanager'
 
 const storage = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
-  encodeFn: (value) => TRA.encrypt(value, 64),
-  decodeFn: (value) => TRA.decrypt(value, 64),
+  encodeFn: (value) => TRA.encrypt(value, 64), // same as default behavior
+  decodeFn: (value) => TRA.decrypt(value, 64), // same as default behavior
 })
 ```
 
-### Disabling Encoding
+### Disabling Encoding or Encryption
 
-If you want to store values **as plain text**, without encryption or transformation, you can disable the encoding and decoding functions by passing a falsy value (like `null` or `undefined`) for `encodeFn` and `decodeFn`.
+If you want to store values **as plain text**, without encryption or transformation, you can disable the encoding and decoding functions by passing a falsy value for `encodeFn` and `decodeFn`.
 
 `StorageManager` will automatically fall back to **identity functions** (`value => value`), which means the data is written and read exactly as-is.
 
-> ⚠️ Note: Objects are still automatically stringified. In that case, the stored string will be prefixed with `\0JSON\0 ` to mark it as JSON. This allows `StorageManager` to correctly parse it back into an object when retrieved.
+> ⚠️ Note: Objects are still automatically stringified. In that case, the stored string will be prefixed with `\x00JSON\x00 ` to mark it as JSON. This allows `StorageManager` to correctly parse it back into an object when retrieved.
 
 ```js
 const storage = new StorageManager('userSettings', {
@@ -103,7 +115,7 @@ const storage = new StorageManager('userSettings', {
 })
 
 storage.value = { theme: 'light' }
-console.log(storage.value) // returns the object from cache
+console.log(storage.storage) // Storage {userSettings: '\x00JSON\x00 {"theme":"dark","language":"en"}', length: 1}
 ```
 
 This is useful for **performance reasons** or when you want your data to be **readable directly in storage**.
@@ -112,14 +124,14 @@ This is useful for **performance reasons** or when you want your data to be **re
 
 If the underlying `Storage` (e.g., `localStorage` or `sessionStorage`) is modified outside of `StorageManager`, the internal cache will **not automatically update**.
 
-To synchronize the cached value with the latest stored data, call `getItem()`. You can also provide a **custom decode function** if needed.
+To synchronize the cached value with the latest stored data, call `sync()`. You can also provide a **custom decode function** if needed.
 
 ```js
 // External change to storage (not recommended)
 localStorage.setItem('userSettings', '{"theme":"blue"}')
 
 // Resynchronize the cache, optionally with a custom decoder
-storage.getItem((value) => JSON.parse(value))
+storage.sync((value) => JSON.parse(value))
 
 console.log(storage.value) // { theme: 'blue' }
 ```
@@ -133,29 +145,48 @@ This ensures that the `StorageManager` instance always reflects the current stat
 ### `constructor(itemName, options)`
 
 - **itemName**: `string` — key under which the data is stored.
-- **options** (optional):
+- **options** _(optional)_:
   - `defaultValue` — default value if none exists.
   - `encodeFn` — function to encode values before saving.
   - `decodeFn` — function to decode values when reading.
-  - `storage` — custom storage object implementing `getItem` and `setItem`.
+  - `storage` — a `Storage` instance (e.g., `localStorage` or `sessionStorage`).
 
 ### `value`
 
-- **Getter**: returns the cached value (fast).
-- **Setter**: sets and caches the value, encoding and serializing if needed.
+- **Getter** — returns the cached value (fast).
+- **Setter** — sets and caches the value, encoding and serializing if needed.
 
-### `getItem(decodeFn)`
+### `sync(decodeFn)`
 
-- **decodeFn** — function to decode values when reading, defaults to `this.decodeFn`.
+- **decodeFn** _(optional)_ — a function to decode values when reading (defaults to `this.decodeFn`).
 - Reads the value from storage.
 - Decodes and parses JSON-encoded objects.
 - Updates the internal cache.
-- Returns the actual stored value or default if missing.
+- Returns the actual stored value or the default if missing.
 
 ### `reset()`
 
-- Resets the value to the default.
-- Returns the new value.
+- Resets the stored value to its configured default.
+- Updates both storage and internal cache.
+- Returns the restored default value.
+
+### `remove()`
+
+- Removes the key and its value from the associated storage.
+- Clears the internal cache.
+- Returns nothing.
+
+### `clear()`
+
+- Clears **all keys** in the linked storage backend (`localStorage` or `sessionStorage`).
+- Affects all stored data, not just this key.
+- Returns nothing.
+
+### `isDefault()`
+
+- Checks whether the cached value equals the configured default.
+- Uses reference comparison for objects and strict equality for primitives.
+- Returns `true` if the current value matches the default, otherwise `false`.
 
 ---
 
@@ -176,7 +207,7 @@ const storage = new StorageManager<Settings>('userSettings', {
 storage.value.theme = 'light' // type-safe
 console.log(storage.value.theme) // 'light'
 
-const current = storage.getItem() // properly typed
+const current = storage.sync()
 console.log(current.theme) // 'light'
 ```
 

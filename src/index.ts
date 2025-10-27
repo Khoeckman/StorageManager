@@ -98,12 +98,10 @@ class StorageManager<T> {
     if (decodeFn && typeof decodeFn !== 'function') throw new TypeError('decodeFn is defined but is not a function')
     this.decodeFn = decodeFn || ((v) => v)
 
-    if (!storage || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function')
-      throw new TypeError('storage must implement the standard Storage API')
+    if (!(storage instanceof Storage)) throw new TypeError('storage must be an instance of Storage')
     this.storage = storage
 
-    // Initialize if missing
-    if (this.getItem() === undefined) this.reset()
+    this.sync()
   }
 
   /**
@@ -128,23 +126,83 @@ class StorageManager<T> {
   }
 
   /**
-   * Retrieves and synchronizes the internal cache with the latest stored value.
+   * Retrieves and synchronizes the internal cache (`value`) with the latest stored value.
    *
-   * Applies decoding (either custom `decodeFn` or instance's `decodeFn`) and parses JSON values.
+   * Applies decoding (using the provided `decodeFn` or the instance's default)
+   * and automatically parses JSON-formatted values that were stored by this class.
    *
-   * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional function to decode the raw stored string.
-   * @returns {T | undefined} The actual value from storage, or the default value if none exists.
+   * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional custom decoding function for the raw stored string.
+   * @returns {T | undefined} The actual decoded and parsed value from storage, or the default value if none exists.
+   *
+   * @example
+   * storage.sync()
+   * console.log(storage.value) // Cached value is now up to date with storage
    */
-  getItem(decodeFn: (value: string) => string = this.decodeFn): T | undefined {
+  sync(decodeFn: (value: string) => string = this.decodeFn): T | undefined {
     let value = this.storage.getItem(this.itemName)
-    if (typeof value !== 'string') return (this.#value = value ?? this.defaultValue)
+    if (typeof value !== 'string') return this.reset()
+
     value = decodeFn(value)
-    return (this.#value = value.startsWith('\0JSON\0\x20') ? JSON.parse(value.slice(7)) : value)
+    if (!value.startsWith('\0JSON\0\x20')) return (this.value = value as T)
+
+    value = value.slice(7)
+    if (value === 'undefined') return (this.value = undefined)
+
+    return (this.value = JSON.parse(value))
   }
 
-  /** Resets the stored value to the default value. */
+  /**
+   * Resets the stored value to its configured default.
+   *
+   * Updates both the underlying storage and the internal cache.
+   *
+   * @returns {T | undefined} The restored default value.
+   *
+   * @example
+   * storage.reset()
+   * console.log(storage.value) // Default value
+   */
   reset(): T | undefined {
     return (this.value = this.defaultValue)
+  }
+
+  /**
+   * Removes this specific key and its value from storage.
+   *
+   * Also clears the internal cache to prevent stale data access.
+   *
+   * @returns {void}
+   *
+   * @example
+   * storage.remove()
+   * console.log(storage.value) // undefined
+   */
+  remove(): void {
+    this.#value = undefined
+    this.storage.removeItem(this.itemName)
+  }
+
+  /**
+   * Clears **all** data from the associated storage backend.
+   *
+   * This affects every key in the storage instance, not just the one
+   * managed by this StorageManager.
+   *
+   * @returns {void}
+   */
+  clear(): void {
+    this.storage.clear()
+  }
+
+  /**
+   * Checks whether the current cached value matches the configured default value.
+   *
+   * Uses reference comparison for objects and strict equality for primitives.
+   *
+   * @returns {boolean} `true` if the cached value equals the default value, otherwise `false`.
+   */
+  isDefault(): boolean {
+    return this.#value === this.defaultValue
   }
 }
 

@@ -82,7 +82,7 @@
     }
   }
   class StorageManager {
-    static version = '3.0.0'
+    static version = '4.0.0'
     itemName
     defaultValue
     encodeFn
@@ -103,10 +103,9 @@
       this.encodeFn = encodeFn || ((v) => v)
       if (decodeFn && typeof decodeFn !== 'function') throw new TypeError('decodeFn is defined but is not a function')
       this.decodeFn = decodeFn || ((v) => v)
-      if (!storage || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function')
-        throw new TypeError('storage must implement the standard Storage API')
+      if (!(storage instanceof Storage)) throw new TypeError('storage must be an instance of Storage')
       this.storage = storage
-      if (this.getItem() === undefined) this.reset()
+      this.sync()
     }
     set value(value) {
       this.#value = value
@@ -116,14 +115,27 @@
     get value() {
       return this.#value
     }
-    getItem(decodeFn = this.decodeFn) {
+    sync(decodeFn = this.decodeFn) {
       let value = this.storage.getItem(this.itemName)
-      if (typeof value !== 'string') return (this.#value = value ?? this.defaultValue)
+      if (typeof value !== 'string') return this.reset()
       value = decodeFn(value)
-      return (this.#value = value.startsWith('\0JSON\0 ') ? JSON.parse(value.slice(7)) : value)
+      if (!value.startsWith('\0JSON\0 ')) return (this.value = value)
+      value = value.slice(7)
+      if (value === 'undefined') return (this.value = undefined)
+      return (this.value = JSON.parse(value))
     }
     reset() {
       return (this.value = this.defaultValue)
+    }
+    remove() {
+      this.#value = undefined
+      this.storage.removeItem(this.itemName)
+    }
+    clear() {
+      this.storage.clear()
+    }
+    isDefault() {
+      return this.#value === this.defaultValue
     }
   }
   exports.ByteArrayConverter = ByteArrayConverter
