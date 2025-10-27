@@ -40,17 +40,18 @@ yarn add @khoeckman/storagemanager
 ```js
 import StorageManager from '@khoeckman/storagemanager'
 
-const userSettingsStorage = new StorageManager('userSettings', {
+const userStore = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
   encodeFn: (value) => btoa(value), // optional encoding
   decodeFn: (value) => atob(value), // optional decoding
 })
 
 // Store a value
-userSettingsStorage.value = { theme: 'light' }
+userStore.value = { theme: 'light' }
 
 // After reloading the page:
-console.log(userSettingsStorage.value) // { theme: 'light' }
+console.log(userStore.value.theme) // 'light'
+console.log(userStore.storage) // Storage {userSettings: 'AEpTT04AIHsidGhlbWUiOiJsaWdodCJ9', length: 1}
 ```
 
 ### Using Custom Storage
@@ -58,13 +59,14 @@ console.log(userSettingsStorage.value) // { theme: 'light' }
 ```js
 import StorageManager from '@khoeckman/storagemanager'
 
-const sessionStore = new StorageManager('tempData', {
-  storage: window.sessionStorage,
+const sessionStore = new StorageManager('sessionData', {
   defaultValue: 'none',
+  storage: window.sessionStorage,
 })
 
 sessionStore.value = 'temporary'
 console.log(sessionStore.value) // 'temporary'
+console.log(sessionStore.storage) // Storage {sessionData: 'hN0IEUdoqmJ/', length: 1}
 ```
 
 ### Resetting Values
@@ -83,7 +85,7 @@ storage.remove()
 console.log(storage.value) // undefined
 ```
 
-### Encrypting (TRA)
+### Encrypting
 
 If you want to make stored data significantly harder to reverse-engineer than with simple Base64 encoding (`btoa` / `atob`), you can use encryption methods such as **TRA** for `encodeFn` and `decodeFn`.
 
@@ -105,7 +107,7 @@ If you want to store values **as plain text**, without encryption or transformat
 
 `StorageManager` will automatically fall back to **identity functions** (`value => value`), which means the data is written and read exactly as-is.
 
-> ⚠️ Note: Objects are still automatically stringified. In that case, the stored string will be prefixed with `\x00JSON\x00 ` to mark it as JSON. This allows `StorageManager` to correctly parse it back into an object when retrieved.
+> ⚠️ Note: Objects are still automatically stringified. In that case, the stored string will be prefixed with `\x00JSON\x00 ` to mark it as JSON. This allows `StorageManager` to correctly parse it back into an object.
 
 ```js
 const storage = new StorageManager('userSettings', {
@@ -115,28 +117,32 @@ const storage = new StorageManager('userSettings', {
 })
 
 storage.value = { theme: 'light' }
-console.log(storage.storage) // Storage {userSettings: '\x00JSON\x00 {"theme":"dark","language":"en"}', length: 1}
+console.log(storage.storage) // Storage {userSettings: '\x00JSON\x00 {"theme":"light"}', length: 1}
+
+storage.value = 'none'
+console.log(storage.storage) // Storage {userSettings: 'none', length: 1}
 ```
 
-This is useful for **performance reasons** or when you want your data to be **readable directly in storage**.
+This is useful for when you want your data to be **readable directly in storage**.
 
 ### Handling External Changes
 
-If the underlying `Storage` (e.g., `localStorage` or `sessionStorage`) is modified outside of `StorageManager`, the internal cache will **not automatically update**.
+If the underlying `Storage` (e.g., `localStorage` or `sessionStorage`) is modified without using `.value =`, the internal cache will **not automatically update**.
 
-To synchronize the cached value with the latest stored data, call `sync()`. You can also provide a **custom decode function** if needed.
+To synchronize the cached value with the stored data, call `sync()`. You can also provide a **custom decode function** if needed.
 
 ```js
 // External change to storage (not recommended)
 localStorage.setItem('userSettings', '{"theme":"blue"}')
 
 // Resynchronize the cache, optionally with a custom decoder
-storage.sync((value) => JSON.parse(value))
+userStore.sync((value) => JSON.parse(value))
 
-console.log(storage.value) // { theme: 'blue' }
+console.log(userStore.value) // { theme: 'blue' }
+console.log(userStore.storage) // Storage {userSettings: '\x00JSON\x00 {"theme":"blue"}', length: 1}
 ```
 
-This ensures that the `StorageManager` instance always reflects the current state of the storage.
+This ensures that the `StorageManager` instance reflects the current state of the storage.
 
 ---
 
@@ -146,9 +152,9 @@ This ensures that the `StorageManager` instance always reflects the current stat
 
 - **itemName**: `string` — key under which the data is stored.
 - **options** _(optional)_:
-  - `defaultValue` — default value if none exists.
-  - `encodeFn` — function to encode values before saving.
-  - `decodeFn` — function to decode values when reading.
+  - `defaultValue` — default value to be stored if none exists.
+  - `encodeFn` — function to encode values before writing to the `Storage`.
+  - `decodeFn` — function to decode values when reading from the `Storage`.
   - `storage` — a `Storage` instance (e.g., `localStorage` or `sessionStorage`).
 
 ### `value`
@@ -158,7 +164,7 @@ This ensures that the `StorageManager` instance always reflects the current stat
 
 ### `sync(decodeFn)`
 
-- **decodeFn** _(optional)_ — a function to decode values when reading (defaults to `this.decodeFn`).
+- **decodeFn** _(optional)_ — a function to decode values when reading (defaults to `options.decodeFn`).
 - Reads the value from storage.
 - Decodes and parses JSON-encoded objects.
 - Updates the internal cache.
@@ -188,9 +194,15 @@ This ensures that the `StorageManager` instance always reflects the current stat
 - Uses reference comparison for objects and strict equality for primitives.
 - Returns `true` if the current value matches the default, otherwise `false`.
 
+```js
+
+```
+
 ---
 
 ## TypeScript Usage
+
+### `constructor<T, HasDefault extends boolean = false>(itemName, options)`
 
 ```ts
 import StorageManager from '@khoeckman/storagemanager'
@@ -200,15 +212,30 @@ interface Settings {
   language: string
 }
 
-const storage = new StorageManager<Settings>('userSettings', {
+const userStore = new StorageManager<Settings>('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
 })
 
-storage.value.theme = 'light' // type-safe
-console.log(storage.value.theme) // 'light'
+// Property 'language' is missing in type '{ theme: "light"; }' but required in type 'Settings'. ts(2741)
+userStore.value = { theme: 'light' }
 
-const current = storage.sync()
+const current = userStore.sync() // (method): T | undefined
+// 'current' is possibly 'undefined'. ts(18048)
 console.log(current.theme) // 'light'
+```
+
+The second error occurs because TypeScript cannot automatically infer that you provided a `defaultValue` of type `Settings`. By default, the `StorageManager` class treats `defaultValue` as optional, so its getter `value` or methods like `sync()` could potentially return `undefined`.
+
+To inform TypeScript that a default value is guaranteed, you can set the second generic parameter `HasDefault` to `true`:
+
+```js
+const userStore = new StorageManager<Settings, true>('userSettings', {
+  defaultValue: { theme: 'dark', language: 'en' },
+})
+
+const current = userStore.sync() // (method): T
+// no error
+console.log(current.theme) // 'light
 ```
 
 ---
