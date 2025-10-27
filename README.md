@@ -239,7 +239,7 @@ const userStore = new StorageManager<Settings, true>('userSettings', {
 
 const current = userStore.sync() // (method): T
 // no error
-console.log(current.theme) // 'light
+console.log(current.theme) // 'light'
 ```
 
 ---
