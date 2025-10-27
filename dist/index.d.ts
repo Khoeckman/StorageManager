@@ -32,7 +32,7 @@
  *
  * @source https://github.com/Khoeckman/StorageManager
  */
-declare class StorageManager<T> {
+declare class StorageManager<T, HasDefault extends boolean = false> {
     #private;
     /** Version of the library, injected via Rollup replace plugin. */
     static version: string;
@@ -70,15 +70,15 @@ declare class StorageManager<T> {
      * Sets the current value in storage.
      * Automatically encodes and caches the value.
      *
-     * @param {T | undefined} value - The value to store. Objects are automatically stringified.
+     * @param {HasDefault extends true ? T : T | undefined} value - The value to store. Objects are automatically stringified.
      */
-    set value(value: T | undefined);
+    set value(value: HasDefault extends true ? T : T | undefined);
     /**
      * Gets the current cached value.
      *
      * @returns {T | undefined} The cached value.
      */
-    get value(): T | undefined;
+    get value(): HasDefault extends true ? T : T | undefined;
     /**
      * Retrieves and synchronizes the internal cache (`value`) with the latest stored value.
      *
@@ -92,7 +92,7 @@ declare class StorageManager<T> {
      * storage.sync()
      * console.log(storage.value) // Cached value is now up to date with storage
      */
-    sync(decodeFn?: (value: string) => string): T | undefined;
+    sync(decodeFn?: (value: string) => string): HasDefault extends true ? T : T | undefined;
     /**
      * Resets the stored value to its configured default.
      *
@@ -104,7 +104,7 @@ declare class StorageManager<T> {
      * storage.reset()
      * console.log(storage.value) // Default value
      */
-    reset(): T | undefined;
+    reset(): HasDefault extends true ? T : T | undefined;
     /**
      * Removes this specific key and its value from storage.
      *

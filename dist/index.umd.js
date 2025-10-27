@@ -1,147 +1,133 @@
-;(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined'
-    ? factory(exports)
-    : typeof define === 'function' && define.amd
-      ? define(['exports'], factory)
-      : ((global = typeof globalThis !== 'undefined' ? globalThis : global || self),
-        factory((global.StorageManager = {})))
-})(this, function (exports) {
-  'use strict'
+(function(global, factory) {
+  typeof exports === "object" && typeof module !== "undefined" ? factory(exports) : typeof define === "function" && define.amd ? define([ "exports" ], factory) : (global = typeof globalThis !== "undefined" ? globalThis : global || self, 
+  factory(global.StorageManager = {}));
+})(this, function(exports) {
+  "use strict";
   class ByteArrayConverter {
     static encodeByteArrayToString(byteArray, radix) {
-      if (!Array.isArray(byteArray) && !(byteArray instanceof Uint8Array))
-        throw new TypeError('encodedString is neither an Array nor Uint8Array')
-      if (!Number.isInteger(radix)) throw new TypeError('radix is not an integer')
-      if ((radix < 2 || radix > 36) && radix !== 64) throw new RangeError('radix is not between 2 and 36 or 64')
-      if (!(byteArray instanceof Uint8Array)) byteArray = new Uint8Array(byteArray)
+      if (!Array.isArray(byteArray) && !(byteArray instanceof Uint8Array)) throw new TypeError("encodedString is neither an Array nor Uint8Array");
+      if (!Number.isInteger(radix)) throw new TypeError("radix is not an integer");
+      if ((radix < 2 || radix > 36) && radix !== 64) throw new RangeError("radix is not between 2 and 36 or 64");
+      if (!(byteArray instanceof Uint8Array)) byteArray = new Uint8Array(byteArray);
       if (radix === 64) {
-        if (typeof btoa === 'undefined') return Buffer.from(byteArray).toString('base64')
-        let binary = ''
-        const chunk = 32768
-        for (let i = 0; i < byteArray.length; i += chunk)
-          binary += String.fromCharCode(...byteArray.subarray(i, i + chunk))
-        return btoa(binary)
+        if (typeof btoa === "undefined") return Buffer.from(byteArray).toString("base64");
+        let binary = "";
+        const chunk = 32768;
+        for (let i = 0; i < byteArray.length; i += chunk) binary += String.fromCharCode(...byteArray.subarray(i, i + chunk));
+        return btoa(binary);
       }
-      const chunkSize = Math.ceil(Math.log(256) / Math.log(radix))
-      return Array.from(byteArray)
-        .map((b) => b.toString(radix).padStart(chunkSize, '0'))
-        .join('')
+      const chunkSize = Math.ceil(Math.log(256) / Math.log(radix));
+      return Array.from(byteArray).map(b => b.toString(radix).padStart(chunkSize, "0")).join("");
     }
     static decodeStringToByteArray(encodedString, radix) {
-      if (typeof encodedString !== 'string') throw new TypeError('encodedString is not a string')
-      if (!Number.isInteger(radix)) throw new TypeError('radix is not an integer')
-      if ((radix < 2 || radix > 36) && radix !== 64) throw new RangeError('radix is not between 2 and 36 or 64')
+      if (typeof encodedString !== "string") throw new TypeError("encodedString is not a string");
+      if (!Number.isInteger(radix)) throw new TypeError("radix is not an integer");
+      if ((radix < 2 || radix > 36) && radix !== 64) throw new RangeError("radix is not between 2 and 36 or 64");
       if (radix === 64) {
-        if (typeof atob === 'undefined') return Uint8Array.from(Buffer.from(encodedString, 'base64'))
-        return Uint8Array.from(atob(encodedString), (c) => c.charCodeAt(0))
+        if (typeof atob === "undefined") return Uint8Array.from(Buffer.from(encodedString, "base64"));
+        return Uint8Array.from(atob(encodedString), c => c.charCodeAt(0));
       }
-      const chunkSize = Math.ceil(Math.log(256) / Math.log(radix))
-      const chunkCount = Math.ceil(encodedString.length / chunkSize)
-      const result = new Uint8Array(chunkCount)
-      const resultSize = chunkCount * chunkSize
-      let resultIdx = 0
-      for (let chunkIdx = 0; chunkIdx < resultSize; chunkIdx += chunkSize)
-        result[resultIdx++] = parseInt(encodedString.slice(chunkIdx, chunkIdx + chunkSize), radix) || 0
-      return result
+      const chunkSize = Math.ceil(Math.log(256) / Math.log(radix));
+      const chunkCount = Math.ceil(encodedString.length / chunkSize);
+      const result = new Uint8Array(chunkCount);
+      const resultSize = chunkCount * chunkSize;
+      let resultIdx = 0;
+      for (let chunkIdx = 0; chunkIdx < resultSize; chunkIdx += chunkSize) result[resultIdx++] = parseInt(encodedString.slice(chunkIdx, chunkIdx + chunkSize), radix) || 0;
+      return result;
     }
   }
   class TRA {
     static encrypt(string, radix = 64) {
-      let uint8Array = new TextEncoder().encode(string)
-      uint8Array = this.#rotate(uint8Array, 1)
-      return ByteArrayConverter.encodeByteArrayToString(uint8Array, radix)
+      let uint8Array = (new TextEncoder).encode(string);
+      uint8Array = this.#rotate(uint8Array, 1);
+      return ByteArrayConverter.encodeByteArrayToString(uint8Array, radix);
     }
     static decrypt(string, radix = 64) {
-      let uint8Array = ByteArrayConverter.decodeStringToByteArray(string, radix)
-      uint8Array = this.#rotate(uint8Array, -1)
-      return new TextDecoder().decode(uint8Array)
+      let uint8Array = ByteArrayConverter.decodeStringToByteArray(string, radix);
+      uint8Array = this.#rotate(uint8Array, -1);
+      return (new TextDecoder).decode(uint8Array);
     }
     static #rotate(uint8Array, rotation) {
-      if (!rotation) return uint8Array
-      const len = uint8Array.length
-      const K = new Uint32Array(256)
+      if (!rotation) return uint8Array;
+      const len = uint8Array.length;
+      const K = new Uint32Array(256);
       for (let i = 0; i < 256; i++) {
-        let x = i ^ (len * 73240379)
-        x = Math.imul(x ^ (x >>> 16), 668269357)
-        x = Math.imul(x ^ (x >>> 15), 391538609)
-        x ^= x >>> 16
-        K[i] = x
+        let x = i ^ len * 73240379;
+        x = Math.imul(x ^ x >>> 16, 668269357);
+        x = Math.imul(x ^ x >>> 15, 391538609);
+        x ^= x >>> 16;
+        K[i] = x;
       }
-      const result = new Uint8Array(len)
+      const result = new Uint8Array(len);
       for (let i = 0; i < len; i++) {
-        let x = (i + 2654431673 * len + K[i & 255]) | 0
-        x ^= x >>> 16
-        x = Math.imul(x, 2246818411)
-        x ^= x >>> 13
-        x = Math.imul(x, 3283267125)
-        x ^= x >>> 16
-        const offset = x & 255
-        result[i] = (uint8Array[i] + offset * rotation) & 255
+        let x = i + 2654431673 * len + K[i & 255] | 0;
+        x ^= x >>> 16;
+        x = Math.imul(x, 2246818411);
+        x ^= x >>> 13;
+        x = Math.imul(x, 3283267125);
+        x ^= x >>> 16;
+        const offset = x & 255;
+        result[i] = uint8Array[i] + offset * rotation & 255;
       }
-      return result
+      return result;
     }
   }
   class StorageManager {
-    static version = '4.0.0'
-    itemName
-    defaultValue
-    encodeFn
-    decodeFn
-    storage
-    #value
+    static version="4.0.0";
+    itemName;
+    defaultValue;
+    encodeFn;
+    decodeFn;
+    storage;
+    #value;
     constructor(itemName, options = {}) {
-      const {
-        defaultValue: defaultValue,
-        encodeFn: encodeFn = (value) => TRA.encrypt(value, 64),
-        decodeFn: decodeFn = (value) => TRA.decrypt(value, 64),
-        storage: storage = window.localStorage,
-      } = options
-      if (typeof itemName !== 'string') throw new TypeError('itemName is not a string')
-      this.itemName = itemName
-      this.defaultValue = defaultValue
-      if (encodeFn && typeof encodeFn !== 'function') throw new TypeError('encodeFn is defined but is not a function')
-      this.encodeFn = encodeFn || ((v) => v)
-      if (decodeFn && typeof decodeFn !== 'function') throw new TypeError('decodeFn is defined but is not a function')
-      this.decodeFn = decodeFn || ((v) => v)
-      if (!(storage instanceof Storage)) throw new TypeError('storage must be an instance of Storage')
-      this.storage = storage
-      this.sync()
+      const {defaultValue: defaultValue, encodeFn: encodeFn = value => TRA.encrypt(value, 64), decodeFn: decodeFn = value => TRA.decrypt(value, 64), storage: storage = window.localStorage} = options;
+      if (typeof itemName !== "string") throw new TypeError("itemName is not a string");
+      this.itemName = itemName;
+      this.defaultValue = defaultValue;
+      if (encodeFn && typeof encodeFn !== "function") throw new TypeError("encodeFn is defined but is not a function");
+      this.encodeFn = encodeFn || (v => v);
+      if (decodeFn && typeof decodeFn !== "function") throw new TypeError("decodeFn is defined but is not a function");
+      this.decodeFn = decodeFn || (v => v);
+      if (!(storage instanceof Storage)) throw new TypeError("storage must be an instance of Storage");
+      this.storage = storage;
+      this.sync();
     }
     set value(value) {
-      this.#value = value
-      const stringValue = typeof value === 'string' ? value : '\0JSON\0 ' + JSON.stringify(value)
-      this.storage.setItem(this.itemName, this.encodeFn(stringValue))
+      this.#value = value;
+      const stringValue = typeof value === "string" ? value : "\0JSON\0 " + JSON.stringify(value);
+      this.storage.setItem(this.itemName, this.encodeFn(stringValue));
     }
     get value() {
-      return this.#value
+      return this.#value ?? this.defaultValue;
     }
     sync(decodeFn = this.decodeFn) {
-      let value = this.storage.getItem(this.itemName)
-      if (typeof value !== 'string') return this.reset()
-      value = decodeFn(value)
-      if (!value.startsWith('\0JSON\0 ')) return (this.value = value)
-      value = value.slice(7)
-      if (value === 'undefined') return (this.value = undefined)
-      return (this.value = JSON.parse(value))
+      let value = this.storage.getItem(this.itemName);
+      if (typeof value !== "string") return this.reset();
+      value = decodeFn(value);
+      if (!value.startsWith("\0JSON\0 ")) return this.value = value;
+      value = value.slice(7);
+      if (value === "undefined") return this.value = undefined;
+      return this.value = JSON.parse(value);
     }
     reset() {
-      return (this.value = this.defaultValue)
+      return this.value = this.defaultValue;
     }
     remove() {
-      this.#value = undefined
-      this.storage.removeItem(this.itemName)
+      this.#value = undefined;
+      this.storage.removeItem(this.itemName);
     }
     clear() {
-      this.storage.clear()
+      this.storage.clear();
     }
     isDefault() {
-      return this.#value === this.defaultValue
+      return this.#value === this.defaultValue;
     }
   }
-  exports.ByteArrayConverter = ByteArrayConverter
-  exports.TRA = TRA
-  exports.default = StorageManager
-  Object.defineProperty(exports, '__esModule', {
-    value: true,
-  })
-})
+  exports.ByteArrayConverter = ByteArrayConverter;
+  exports.TRA = TRA;
+  exports.default = StorageManager;
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+});

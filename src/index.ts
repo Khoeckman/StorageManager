@@ -36,7 +36,7 @@ declare const __VERSION__: string
  *
  * @source https://github.com/Khoeckman/StorageManager
  */
-class StorageManager<T> {
+class StorageManager<T, HasDefault extends boolean = false> {
   /** Version of the library, injected via Rollup replace plugin. */
   static version: string = __VERSION__
 
@@ -108,9 +108,9 @@ class StorageManager<T> {
    * Sets the current value in storage.
    * Automatically encodes and caches the value.
    *
-   * @param {T | undefined} value - The value to store. Objects are automatically stringified.
+   * @param {HasDefault extends true ? T : T | undefined} value - The value to store. Objects are automatically stringified.
    */
-  set value(value: T | undefined) {
+  set value(value: HasDefault extends true ? T : T | undefined) {
     this.#value = value
     const stringValue = typeof value === 'string' ? value : '\0JSON\0\x20' + JSON.stringify(value)
     this.storage.setItem(this.itemName, this.encodeFn(stringValue))
@@ -121,8 +121,8 @@ class StorageManager<T> {
    *
    * @returns {T | undefined} The cached value.
    */
-  get value(): T | undefined {
-    return this.#value
+  get value(): HasDefault extends true ? T : T | undefined {
+    return this.#value ?? (this.defaultValue as HasDefault extends true ? T : T | undefined)
   }
 
   /**
@@ -138,7 +138,7 @@ class StorageManager<T> {
    * storage.sync()
    * console.log(storage.value) // Cached value is now up to date with storage
    */
-  sync(decodeFn: (value: string) => string = this.decodeFn): T | undefined {
+  sync(decodeFn: (value: string) => string = this.decodeFn): HasDefault extends true ? T : T | undefined {
     let value = this.storage.getItem(this.itemName)
     if (typeof value !== 'string') return this.reset()
 
@@ -146,7 +146,7 @@ class StorageManager<T> {
     if (!value.startsWith('\0JSON\0\x20')) return (this.value = value as T)
 
     value = value.slice(7)
-    if (value === 'undefined') return (this.value = undefined)
+    if (value === 'undefined') return (this.value = undefined as T)
 
     return (this.value = JSON.parse(value))
   }
@@ -162,8 +162,8 @@ class StorageManager<T> {
    * storage.reset()
    * console.log(storage.value) // Default value
    */
-  reset(): T | undefined {
-    return (this.value = this.defaultValue)
+  reset(): HasDefault extends true ? T : T | undefined {
+    return (this.value = this.defaultValue as HasDefault extends true ? T : T | undefined)
   }
 
   /**
