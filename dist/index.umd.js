@@ -82,7 +82,7 @@
     }
   }
   class StorageManager {
-    static version = '4.0.3'
+    static version = '4.0.4'
     itemName
     defaultValue
     encodeFn
