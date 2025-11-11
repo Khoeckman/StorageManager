@@ -32,8 +32,6 @@ export default {
       compress: false,
       mangle: false,
       format: {
-        beautify: true,
-        indent_level: 2,
         comments: false,
       },
     }),

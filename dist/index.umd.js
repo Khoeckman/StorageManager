@@ -141,7 +141,5 @@
   exports.ByteArrayConverter = ByteArrayConverter
   exports.TRA = TRA
   exports.default = StorageManager
-  Object.defineProperty(exports, '__esModule', {
-    value: true,
-  })
+  Object.defineProperty(exports, '__esModule', { value: true })
 })

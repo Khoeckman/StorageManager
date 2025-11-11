@@ -10,8 +10,7 @@
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "sourceMap": false
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

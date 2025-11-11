@@ -1,9 +1,5 @@
 'use strict'
-
-Object.defineProperty(exports, '__esModule', {
-  value: true,
-})
-
+Object.defineProperty(exports, '__esModule', { value: true })
 class ByteArrayConverter {
   static encodeByteArrayToString(byteArray, radix) {
     if (!Array.isArray(byteArray) && !(byteArray instanceof Uint8Array))
@@ -42,7 +38,6 @@ class ByteArrayConverter {
     return result
   }
 }
-
 class TRA {
   static encrypt(string, radix = 64) {
     let uint8Array = new TextEncoder().encode(string)
@@ -79,7 +74,6 @@ class TRA {
     return result
   }
 }
-
 class StorageManager {
   static version = '4.0.3'
   itemName
@@ -137,9 +131,6 @@ class StorageManager {
     return this.#value === this.defaultValue
   }
 }
-
 exports.ByteArrayConverter = ByteArrayConverter
-
 exports.TRA = TRA
-
 exports.default = StorageManager

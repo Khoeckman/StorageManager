@@ -36,7 +36,6 @@ class ByteArrayConverter {
     return result
   }
 }
-
 class TRA {
   static encrypt(string, radix = 64) {
     let uint8Array = new TextEncoder().encode(string)
@@ -73,7 +72,6 @@ class TRA {
     return result
   }
 }
-
 class StorageManager {
   static version = '4.0.3'
   itemName
@@ -131,5 +129,4 @@ class StorageManager {
     return this.#value === this.defaultValue
   }
 }
-
 export { ByteArrayConverter, TRA, StorageManager as default }
