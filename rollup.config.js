@@ -13,10 +13,9 @@ export default {
       file: 'dist/index.umd.js',
       format: 'umd',
       name: 'StorageManager',
-      exports: 'named',
     },
     { file: 'dist/index.mjs', format: 'es' },
-    { file: 'dist/index.cjs', format: 'cjs', exports: 'named' },
+    { file: 'dist/index.cjs', format: 'cjs' },
   ],
   plugins: [
     del({ targets: 'dist/*' }),
@@ -27,13 +26,5 @@ export default {
     }),
     typescript({ tsconfig: './tsconfig.json' }),
     commonjs(),
-    terser({
-      maxWorkers: 16,
-      compress: false,
-      mangle: false,
-      format: {
-        comments: false,
-      },
-    }),
   ],
 }

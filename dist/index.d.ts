@@ -1,4 +1,4 @@
-type StorageValue<T, HasDefault extends boolean> = HasDefault extends true ? T : T | undefined
+import TRA from './TRA/TRA'
 /**
  * @class StorageManager
  * @classdesc A lightweight and efficient wrapper for managing data in a Storage-like interface
@@ -33,14 +33,15 @@ type StorageValue<T, HasDefault extends boolean> = HasDefault extends true ? T :
  *
  * @source https://github.com/Khoeckman/StorageManager
  */
-declare class StorageManager<T, HasDefault extends boolean = false> {
+declare class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
   #private
   /** Version of the library, injected via Rollup replace plugin. */
-  static version: string
+  static readonly version: string
+  static readonly TRA: typeof TRA
   /** Key name under which the data is stored. */
   readonly itemName: string
   /** Default value used when the key does not exist in storage. */
-  private readonly defaultValue?
+  private readonly defaultValue
   /** Function to encode values before storing. Defaults to TRA.encrypt with radix 64. */
   private readonly encodeFn
   /** Function to decode values when reading. Defaults to TRA.decrypt with radix 64. */
@@ -64,7 +65,7 @@ declare class StorageManager<T, HasDefault extends boolean = false> {
   constructor(
     itemName: string,
     options?: {
-      defaultValue?: T
+      defaultValue?: DefaultValue
       encodeFn?: (value: string) => string
       decodeFn?: (value: string) => string
       storage?: Storage
@@ -74,15 +75,15 @@ declare class StorageManager<T, HasDefault extends boolean = false> {
    * Sets the current value in storage.
    * Automatically encodes and caches the value.
    *
-   * @param {StorageValue<T, HasDefault>} value - The value to store. Objects are automatically stringified.
+   * @param {T | DefaultValue} value - The value to store. Objects are automatically stringified.
    */
-  set value(value: StorageValue<T, HasDefault>)
+  set value(value: T | DefaultValue)
   /**
    * Gets the current cached value.
    *
-   * @returns {StorageValue<T, HasDefault>} The cached value.
+   * @returns {T | undefined} The cached value.
    */
-  get value(): StorageValue<T, HasDefault>
+  get value(): T | DefaultValue
   /**
    * Retrieves and synchronizes the internal cache (`value`) with the latest stored value.
    *
@@ -90,25 +91,25 @@ declare class StorageManager<T, HasDefault extends boolean = false> {
    * and automatically parses JSON-formatted values that were stored by this class.
    *
    * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional custom decoding function for the raw stored string.
-   * @returns {StorageValue<T, HasDefault>} The actual decoded and parsed value from storage, or the default value if none exists.
+   * @returns {T | DefaultValue} The actual decoded and parsed value from storage, or the default value if none exists.
    *
    * @example
    * storage.sync()
    * console.log(storage.value) // Cached value is now up to date with storage
    */
-  sync(decodeFn?: (value: string) => string): StorageValue<T, HasDefault>
+  sync(decodeFn?: (value: string) => string): T | DefaultValue
   /**
    * Resets the stored value to its configured default.
    *
    * Updates both the underlying storage and the internal cache.
    *
-   * @returns {StorageValue<T, HasDefault>} The restored default value.
+   * @returns {DefaultValue} The restored default value.
    *
    * @example
    * storage.reset()
    * console.log(storage.value) // Default value
    */
-  reset(): StorageValue<T, HasDefault>
+  reset(): DefaultValue
   /**
    * Removes this specific key and its value from storage.
    *
@@ -136,5 +137,3 @@ declare class StorageManager<T, HasDefault extends boolean = false> {
   isDefault(): boolean
 }
 export default StorageManager
-export { default as TRA } from './TRA/TRA'
-export { default as ByteArrayConverter } from './TRA/ByteArrayConverter'

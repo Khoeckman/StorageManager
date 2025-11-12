@@ -91,15 +91,15 @@ console.log(storage.value) // undefined
 
 If you want to make stored data significantly harder to reverse-engineer than with simple Base64 encoding (`btoa` / `atob`), you can use encryption methods such as **TRA** for `encodeFn` and `decodeFn`.
 
-This is also the **default behavior**, if you don't specify your own encoding or decoding functions, `StorageManager` automatically uses `TRA.encrypt` and `TRA.decrypt` internally.
+This is also the **default behavior**, if you don't specify your own encoding or decoding functions, `StorageManager` automatically uses `StorageManager.TRA.encrypt` and `StorageManager.TRA.decrypt` internally.
 
 ```js
-import StorageManager, { TRA } from '@khoeckman/storagemanager'
+import StorageManager from '@khoeckman/storagemanager'
 
 const storage = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
-  encodeFn: (value) => TRA.encrypt(value, 64), // same as default behavior
-  decodeFn: (value) => TRA.decrypt(value, 64), // same as default behavior
+  encodeFn: (value) => StorageManager.TRA.encrypt(value, 64), // same as default behavior
+  decodeFn: (value) => StorageManager.TRA.decrypt(value, 64), // same as default behavior
 })
 ```
 
@@ -216,30 +216,30 @@ interface Settings {
   language: string
 }
 
-const userStore = new StorageManager<Settings>('userSettings', {
-  defaultValue: { theme: 'dark', language: 'en' },
-})
+const defaultValue: Settings = { theme: 'dark', language: 'en' }
+const userStore = new StorageManager<Settings>('userSettings', { defaultValue })
 
 // Property 'language' is missing in type '{ theme: "light"; }' but required in type 'Settings'. ts(2741)
 userStore.value = { theme: 'light' }
 
-const current = userStore.sync() // (method): T | undefined
+const current = userStore.sync() // (method): Settings | undefined
 // 'current' is possibly 'undefined'. ts(18048)
-console.log(current.theme) // 'light'
+console.log(current.theme)
 ```
 
 The second error occurs because TypeScript cannot automatically infer that you provided a `defaultValue` of type `Settings`. By default, the `StorageManager` class treats `defaultValue` as optional, so its getter `value` or methods like `sync()` could potentially return `undefined`.
 
-To inform TypeScript that a default value is guaranteed, you can set the second generic parameter `HasDefault` to `true`:
+To inform TypeScript that a default value is guaranteed, you can set the second generic parameter `DefaultValue` to the type of whatever you passed as `defaultValue`:
 
-```js
-const userStore = new StorageManager<Settings, true>('userSettings', {
-  defaultValue: { theme: 'dark', language: 'en' },
+```ts
+const defaultValue: Settings = { theme: 'dark', language: 'en' }
+const userStore = new StorageManager<Settings, typeof defaultValue>('userSettings', {
+  defaultValue,
 })
 
-const current = userStore.sync() // (method): T
+const current = userStore.sync() // (method): Settings
 // no error
-console.log(current.theme) // 'light'
+console.log(current.theme)
 ```
 
 ---

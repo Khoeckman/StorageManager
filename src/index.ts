@@ -1,8 +1,7 @@
 import TRA from './TRA/TRA'
 
+// Injected by Rollup
 declare const __VERSION__: string
-
-type StorageValue<T, HasDefault extends boolean> = HasDefault extends true ? T : T | undefined
 
 /**
  * @class StorageManager
@@ -39,15 +38,17 @@ type StorageValue<T, HasDefault extends boolean> = HasDefault extends true ? T :
  * @source https://github.com/Khoeckman/StorageManager
  */
 
-class StorageManager<T, HasDefault extends boolean = false> {
+class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
   /** Version of the library, injected via Rollup replace plugin. */
-  static version: string = __VERSION__
+  static readonly version: string = __VERSION__
+
+  static readonly TRA: typeof TRA = TRA
 
   /** Key name under which the data is stored. */
   readonly itemName: string
 
   /** Default value used when the key does not exist in storage. */
-  private readonly defaultValue?: T
+  private readonly defaultValue: DefaultValue
 
   /** Function to encode values before storing. Defaults to TRA.encrypt with radix 64. */
   private readonly encodeFn: (value: string) => string
@@ -78,7 +79,7 @@ class StorageManager<T, HasDefault extends boolean = false> {
   constructor(
     itemName: string,
     options: {
-      defaultValue?: T
+      defaultValue?: DefaultValue
       encodeFn?: (value: string) => string
       decodeFn?: (value: string) => string
       storage?: Storage
@@ -86,14 +87,14 @@ class StorageManager<T, HasDefault extends boolean = false> {
   ) {
     const {
       defaultValue,
-      encodeFn = (value: string) => TRA.encrypt(value, 64),
-      decodeFn = (value: string) => TRA.decrypt(value, 64),
+      encodeFn = (value: string) => StorageManager.TRA.encrypt(value, 64),
+      decodeFn = (value: string) => StorageManager.TRA.decrypt(value, 64),
       storage = window.localStorage,
     } = options
 
     if (typeof itemName !== 'string') throw new TypeError('itemName is not a string')
     this.itemName = itemName
-    this.defaultValue = defaultValue
+    this.defaultValue = defaultValue as DefaultValue
 
     if (encodeFn && typeof encodeFn !== 'function') throw new TypeError('encodeFn is defined but is not a function')
     this.encodeFn = encodeFn || ((v) => v)
@@ -111,9 +112,9 @@ class StorageManager<T, HasDefault extends boolean = false> {
    * Sets the current value in storage.
    * Automatically encodes and caches the value.
    *
-   * @param {StorageValue<T, HasDefault>} value - The value to store. Objects are automatically stringified.
+   * @param {T | DefaultValue} value - The value to store. Objects are automatically stringified.
    */
-  set value(value: StorageValue<T, HasDefault>) {
+  set value(value: T | DefaultValue) {
     this.#value = value
     const stringValue = typeof value === 'string' ? value : '\0JSON\0\x20' + JSON.stringify(value)
     this.storage.setItem(this.itemName, this.encodeFn(stringValue))
@@ -122,10 +123,10 @@ class StorageManager<T, HasDefault extends boolean = false> {
   /**
    * Gets the current cached value.
    *
-   * @returns {StorageValue<T, HasDefault>} The cached value.
+   * @returns {T | undefined} The cached value.
    */
-  get value(): StorageValue<T, HasDefault> {
-    return this.#value ?? (this.defaultValue as StorageValue<T, HasDefault>)
+  get value(): T | DefaultValue {
+    return this.#value ?? this.defaultValue
   }
 
   /**
@@ -135,21 +136,24 @@ class StorageManager<T, HasDefault extends boolean = false> {
    * and automatically parses JSON-formatted values that were stored by this class.
    *
    * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional custom decoding function for the raw stored string.
-   * @returns {StorageValue<T, HasDefault>} The actual decoded and parsed value from storage, or the default value if none exists.
+   * @returns {T | DefaultValue} The actual decoded and parsed value from storage, or the default value if none exists.
    *
    * @example
    * storage.sync()
    * console.log(storage.value) // Cached value is now up to date with storage
    */
-  sync(decodeFn: (value: string) => string = this.decodeFn): StorageValue<T, HasDefault> {
+  sync(decodeFn: (value: string) => string = this.decodeFn): T | DefaultValue {
     let value = this.storage.getItem(this.itemName)
     if (typeof value !== 'string') return this.reset()
 
     value = decodeFn(value)
-    if (!value.startsWith('\0JSON\0\x20')) return (this.value = value as T)
+    if (!value.startsWith('\0JSON\0\x20')) return (this.value = value as T) // value can only be of type T as it is checked on assignment
 
+    // Slice off '\0JSON\0\x20' prefix
     value = value.slice(7)
-    if (value === 'undefined') return (this.value = undefined as T)
+
+    // Manually convert unparseable JSON object
+    if (value === 'undefined') return (this.value = undefined as T) // this can only ever happen if type T allows undefined
 
     return (this.value = JSON.parse(value))
   }
@@ -159,14 +163,14 @@ class StorageManager<T, HasDefault extends boolean = false> {
    *
    * Updates both the underlying storage and the internal cache.
    *
-   * @returns {StorageValue<T, HasDefault>} The restored default value.
+   * @returns {DefaultValue} The restored default value.
    *
    * @example
    * storage.reset()
    * console.log(storage.value) // Default value
    */
-  reset(): StorageValue<T, HasDefault> {
-    return (this.value = this.defaultValue as StorageValue<T, HasDefault>)
+  reset(): DefaultValue {
+    return (this.value = this.defaultValue)
   }
 
   /**
@@ -206,5 +210,3 @@ class StorageManager<T, HasDefault extends boolean = false> {
 }
 
 export default StorageManager
-export { default as TRA } from './TRA/TRA'
-export { default as ByteArrayConverter } from './TRA/ByteArrayConverter'
