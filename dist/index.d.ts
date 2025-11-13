@@ -123,6 +123,7 @@ declare class StorageManager<T, DefaultValue extends T | undefined = T | undefin
    *
    * This affects every key in the storage instance, not just the one
    * managed by this StorageManager.
+   * Also clears the internal cache to prevent stale data access.
    *
    * @returns {void}
    */

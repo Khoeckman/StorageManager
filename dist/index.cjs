@@ -248,7 +248,7 @@ class TRA {
  */
 class StorageManager {
   /** Version of the library, injected via Rollup replace plugin. */
-  static version = '4.1.0'
+  static version = '4.1.1'
   static TRA = TRA
   /** Key name under which the data is stored. */
   itemName
@@ -367,10 +367,12 @@ class StorageManager {
    *
    * This affects every key in the storage instance, not just the one
    * managed by this StorageManager.
+   * Also clears the internal cache to prevent stale data access.
    *
    * @returns {void}
    */
   clear() {
+    this.#value = undefined
     this.storage.clear()
   }
   /**
