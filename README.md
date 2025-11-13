@@ -74,17 +74,18 @@ console.log(sessionStore.storage) // Storage {sessionData: 'hN0IEUdoqmJ/', leng
 ### Resetting Values
 
 ```js
-storage.reset()
-console.log(storage.value) // back to default value
+store.reset()
+console.log(store.value) // back to default value
 ```
 
 ### Removing Values
 
-Uses `Storage.removeItem()` internally to remove the item from storage and sets the cached value to `undefined`.
+Internally uses `Storage.removeItem()` to remove the item from storage and sets the cached value to `undefined`.
 
 ```js
-storage.remove()
-console.log(storage.value) // undefined
+store.remove()
+console.log(store.value) // undefined
+console.log(store.storage) // Storage {length: 0}
 ```
 
 ### Encrypting
@@ -96,7 +97,7 @@ This is also the **default behavior**, if you don't specify your own encoding or
 ```js
 import StorageManager from '@khoeckman/storagemanager'
 
-const storage = new StorageManager('userSettings', {
+const userStore = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
   encodeFn: (value) => StorageManager.TRA.encrypt(value, 64), // same as default behavior
   decodeFn: (value) => StorageManager.TRA.decrypt(value, 64), // same as default behavior
@@ -112,17 +113,17 @@ If you want to store values **as plain text**, without encryption or transformat
 > ⚠️ Note: Objects are still automatically stringified. In that case, the stored string will be prefixed with `\x00JSON\x00 ` to mark it as JSON. This allows `StorageManager` to correctly parse it back into an object.
 
 ```js
-const storage = new StorageManager('userSettings', {
+const useStore = new StorageManager('userSettings', {
   defaultValue: { theme: 'dark', language: 'en' },
   encodeFn: null, // disables encoding
   decodeFn: null, // disables decoding
 })
 
-storage.value = { theme: 'light' }
-console.log(storage.storage) // Storage {userSettings: '\x00JSON\x00 {"theme":"light"}', length: 1}
+useStore.value = { theme: 'light' }
+console.log(useStore.storage) // Storage {userSettings: '\x00JSON\x00 {"theme":"light"}', length: 1}
 
-storage.value = 'none'
-console.log(storage.storage) // Storage {userSettings: 'none', length: 1}
+useStore.value = 'none'
+console.log(useStore.storage) // Storage {userSettings: 'none', length: 1}
 ```
 
 This is useful for when you want your data to be **readable directly in storage**.
