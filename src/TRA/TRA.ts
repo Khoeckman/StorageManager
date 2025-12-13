@@ -114,8 +114,7 @@ export default class TRA {
       x ^= x >>> 13
       x = Math.imul(x, 0xc3b2ae35)
       x ^= x >>> 16
-      const offset = x & 0xff
-      result[i] = (uint8Array[i] + offset * rotation) & 0xff
+      result[i] = (uint8Array[i] + (x & 0xff) * rotation) & 0xff
     }
 
     return result

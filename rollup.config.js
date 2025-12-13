@@ -1,7 +1,5 @@
 import pkg from './package.json' with { type: 'json' }
 import del from 'rollup-plugin-delete'
-import resolve from '@rollup/plugin-node-resolve'
-import commonjs from '@rollup/plugin-commonjs'
 import typescript from '@rollup/plugin-typescript'
 import replace from '@rollup/plugin-replace'
 import terser from '@rollup/plugin-terser'
@@ -13,18 +11,23 @@ export default {
       file: 'dist/index.umd.js',
       format: 'umd',
       name: 'StorageManager',
+      plugins: [
+        terser({
+          format: {
+            comments: false,
+          },
+        }),
+      ],
     },
     { file: 'dist/index.mjs', format: 'es' },
     { file: 'dist/index.cjs', format: 'cjs' },
   ],
   plugins: [
     del({ targets: 'dist/*' }),
-    resolve({ extensions: ['.ts', '.json'] }),
     replace({
       preventAssignment: true,
       __VERSION__: JSON.stringify(pkg.version),
     }),
     typescript({ tsconfig: './tsconfig.json' }),
-    commonjs(),
   ],
 }
