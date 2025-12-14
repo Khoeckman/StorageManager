@@ -21,8 +21,8 @@
   ],
   "scripts": {
     "test": "exit 0",
-    "build": "rollup -c",
-    "prepack": "npm update && npm run build"
+    "build": "rollup -c rollup.config.js",
+    "prepack": "npm run build"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^6.0.2",
