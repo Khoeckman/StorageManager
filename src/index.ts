@@ -149,7 +149,8 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
     // Don't trust the incoming value, it might not be properly encoded
     try {
       value = decodeFn(value)
-    } catch {
+    } catch (err) {
+      console.error(err)
       return this.reset()
     }
 
