@@ -111,8 +111,6 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
   /**
    * Sets the current value in storage.
    * Automatically encodes and caches the value.
-   *
-   * @param {T | DefaultValue} value - The value to store. Objects are automatically stringified.
    */
   set value(value: T | DefaultValue) {
     this.#value = value
@@ -122,8 +120,6 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
 
   /**
    * Gets the current cached value.
-   *
-   * @returns {T | undefined} The cached value.
    */
   get value(): T | DefaultValue {
     return this.#value ?? this.defaultValue
@@ -134,9 +130,6 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
    *
    * Applies decoding (using the provided `decodeFn` or the instance's default)
    * and automatically parses JSON-formatted values that were stored by this class.
-   *
-   * @param {(value: string) => string} [decodeFn=this.decodeFn] - Optional custom decoding function for the raw stored string.
-   * @returns {T | DefaultValue} The actual decoded and parsed value from storage, or the default value if none exists.
    *
    * @example
    * storage.sync()
@@ -170,8 +163,6 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
    *
    * Updates both the underlying storage and the internal cache.
    *
-   * @returns {DefaultValue} The restored default value.
-   *
    * @example
    * storage.reset()
    * console.log(storage.value) // Default value
@@ -184,8 +175,6 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
    * Removes this specific key and its value from storage.
    *
    * Also clears the internal cache to prevent stale data access.
-   *
-   * @returns {void}
    */
   remove(): void {
     this.#value = undefined
@@ -198,8 +187,6 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
    * This affects every key in the storage instance, not just the one
    * managed by this StorageManager.
    * Also clears the internal cache to prevent stale data access.
-   *
-   * @returns {void}
    */
   clear(): void {
     this.#value = undefined
@@ -210,8 +197,6 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
    * Checks whether the current cached value matches the configured default value.
    *
    * Uses reference comparison for objects and strict equality for primitives.
-   *
-   * @returns {boolean} `true` if the cached value equals the default value, otherwise `false`.
    */
   isDefault(): boolean {
     return this.#value === this.defaultValue
