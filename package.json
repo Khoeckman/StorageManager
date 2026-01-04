@@ -1,6 +1,6 @@
 {
   "name": "@khoeckman/storagemanager",
-  "version": "4.1.2",
+  "version": "4.1.3",
   "description": "A lightweight wrapper for Storage-like interfaces with efficient caching, out-of-the-box encryption and JSON support.",
   "license": "MIT",
   "author": "Khoeckman",
@@ -25,13 +25,13 @@
     "prepack": "npm run build"
   },
   "devDependencies": {
-    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.3.0",
-    "@types/node": "^24.9.1",
-    "prettier": "^3.6.2",
-    "rollup": "^4.52.4",
-    "rollup-plugin-delete": "^3.0.1",
+    "@types/node": "^24.10.4",
+    "prettier": "^3.7.4",
+    "rollup": "^4.54.0",
+    "rollup-plugin-delete": "^3.0.2",
     "rollup-plugin-prettier": "^4.1.2",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3"
@@ -63,5 +63,8 @@
     "client",
     "module",
     "commonjs"
-  ]
+  ],
+  "dependencies": {
+    "pnpm": "^10.27.0"
+  }
 }
