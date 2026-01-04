@@ -146,7 +146,13 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
     let value = this.storage.getItem(this.itemName)
     if (typeof value !== 'string') return this.reset()
 
-    value = decodeFn(value)
+    // Don't trust the incoming value, it might not be properly encoded
+    try {
+      value = decodeFn(value)
+    } catch {
+      return this.reset()
+    }
+
     if (!value.startsWith('\0JSON\0\x20')) return (this.value = value as T) // value can only be of type T as it is checked on assignment
 
     // Slice off '\0JSON\0\x20' prefix
