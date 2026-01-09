@@ -1,59 +1,27 @@
-import TRA from './TRA/TRA'
-
 // Injected by Rollup
 declare const __VERSION__: string
 
 /**
- * @class StorageManager
- * @classdesc A lightweight and efficient wrapper for managing data in a Storage-like interface
- * (defaulting to {@link window.localStorage}), with optional encoding and decoding support.
- * Automatically initializes with its default value if none is present.
+ * @class HyperStorage
+ * @classdesc A lightweight wrapper for localStorage/sessionStorage
+ * with efficient caching and type-preserving serialization.
  *
- * This class includes an internal cache (`#value`) to improve performance.
- * Using the {@link StorageManager.value|value} getter is significantly faster
- * than reading from storage repeatedly. However, if the stored value is modified
- * externally (e.g., via {@link Storage.setItem} or the browser console),
- * the cached value will become outdated.
- *
- * To re-synchronize the cache with the actual stored value, call
- * {@link StorageManager.getItem|getItem()}.
- *
- * @example
- * const storage = new StorageManager('userSettings', {
- *   defaultValue: { theme: 'dark', language: 'en' },
- *   encodeFn: (value) => btoa(value),  // optional encoding
- *   decodeFn: (value) => atob(value),  // optional decoding
- * });
- *
- * storage.value = { theme: 'light' };   // stores encoded and cached
- * console.log(storage.value);           // fast access from memory cache
- *
- * @example
- * const sessionStore = new StorageManager('tempData', {
- *   storage: window.sessionStorage,
- *   defaultValue: 'none',
- * });
- * sessionStore.value = 'temporary';
- *
- * @source https://github.com/Khoeckman/StorageManager
+ * @source https://github.com/Khoeckman/HyperStorage
  */
-
-class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
+class HyperStorage<T> {
   /** Version of the library, injected via Rollup replace plugin. */
   static readonly version: string = __VERSION__
-
-  static readonly TRA: typeof TRA = TRA
 
   /** Key name under which the data is stored. */
   readonly itemName: string
 
   /** Default value used when the key does not exist in storage. */
-  private readonly defaultValue: DefaultValue
+  private readonly defaultValue: T
 
-  /** Function to encode values before storing. Defaults to TRA.encrypt with radix 64. */
+  /** Function to encode values before storing. */
   private readonly encodeFn: (value: string) => string
 
-  /** Function to decode values when reading. Defaults to TRA.decrypt with radix 64. */
+  /** Function to decode values when reading. */
   private readonly decodeFn: (value: string) => string
 
   /** The underlying storage backend (defaults to `window.localStorage`). */
@@ -63,11 +31,11 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
   #value?: T
 
   /**
-   * Creates a new StorageManager instance.
+   * Creates a new HyperStorage instance.
    *
    * @param {string} itemName - The key name under which the data will be stored.
+   * @param {T} [defaultValue] - Default value if the key does not exist.
    * @param {Object} [options={}] - Optional configuration parameters.
-   * @param {T} [options.defaultValue] - Default value if the key does not exist.
    * @param {(value: string) => string} [options.encodeFn] - Optional function to encode stored values.
    * @param {(value: string) => string} [options.decodeFn] - Optional function to decode stored values.
    * @param {Storage} [options.storage=window.localStorage] - Optional custom storage backend.
@@ -78,23 +46,18 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
    */
   constructor(
     itemName: string,
+    defaultValue: T,
     options: {
-      defaultValue?: DefaultValue
       encodeFn?: (value: string) => string
       decodeFn?: (value: string) => string
       storage?: Storage
     } = {}
   ) {
-    const {
-      defaultValue,
-      encodeFn = (value: string) => StorageManager.TRA.encrypt(value, 64),
-      decodeFn = (value: string) => StorageManager.TRA.decrypt(value, 64),
-      storage = window.localStorage,
-    } = options
+    const { encodeFn, decodeFn, storage = window.localStorage } = options
 
     if (typeof itemName !== 'string') throw new TypeError('itemName is not a string')
     this.itemName = itemName
-    this.defaultValue = defaultValue as DefaultValue
+    this.defaultValue = defaultValue
 
     if (encodeFn && typeof encodeFn !== 'function') throw new TypeError('encodeFn is defined but is not a function')
     this.encodeFn = encodeFn || ((v) => v)
@@ -110,36 +73,55 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
 
   /**
    * Sets the current value in storage.
-   * Automatically encodes and caches the value.
+   * Automatically caches, stringifies and encodes the value.
    */
-  set value(value: T | DefaultValue) {
+  set value(value: T) {
+    // Cache real value
     this.#value = value
-    const stringValue = typeof value === 'string' ? value : '\0JSON\0\x20' + JSON.stringify(value)
+
+    // Store stringified value with prefix to distinguish from raw strings
+    let stringValue: string
+
+    if (typeof value === 'string') {
+      if (value[0] === '\0') stringValue = '\0' + value
+      else stringValue = value
+    } else if (
+      value === undefined ||
+      (typeof value === 'number' && (isNaN(value) || value === Infinity || value === -Infinity))
+    )
+      // Manually stringify non-JSON values
+      stringValue = String(value)
+    else stringValue = '\0' + JSON.stringify(value)
     this.storage.setItem(this.itemName, this.encodeFn(stringValue))
   }
 
   /**
    * Gets the current cached value.
    */
-  get value(): T | DefaultValue {
+  get value(): T {
     return this.#value ?? this.defaultValue
   }
 
   /**
-   * Retrieves and synchronizes the internal cache (`value`) with the latest stored value.
-   *
-   * Applies decoding (using the provided `decodeFn` or the instance's default)
-   * and automatically parses JSON-formatted values that were stored by this class.
-   *
-   * @example
-   * storage.sync()
-   * console.log(storage.value) // Cached value is now up to date with storage
+   * Allows using the setter with a callback.
    */
-  sync(decodeFn: (value: string) => string = this.decodeFn): T | DefaultValue {
+  set(callback: (value: T) => T): T {
+    return (this.value = callback(this.value))
+  }
+
+  /**
+   * Synchronizes the internal cache (`#value`) with the actual value in storage.
+   *
+   * This is only necessary if the stored value may have been modified externally.
+   * Using this function should be avoided when possible and is not type safe.
+   */
+  sync(decodeFn = this.decodeFn): unknown {
     let value = this.storage.getItem(this.itemName)
+
+    // Reset value to defaultValue if it does not exist in storage
     if (typeof value !== 'string') return this.reset()
 
-    // Don't trust the incoming value, it might not be properly encoded
+    // Reset value to defaultValue if the incoming value is not properly encoded
     try {
       value = decodeFn(value)
     } catch (err) {
@@ -147,27 +129,28 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
       return this.reset()
     }
 
-    if (!value.startsWith('\0JSON\0\x20')) return (this.value = value as T) // value can only be of type T as it is checked on assignment
+    if (value[0] !== '\0') return (this.value = value as T) // Raw string value
 
-    // Slice off '\0JSON\0\x20' prefix
-    value = value.slice(7)
+    // Slice off '\0' prefix
+    value = value.slice(1)
 
-    // Manually convert unparseable JSON object
-    if (value === 'undefined') return (this.value = undefined as T) // this can only ever happen if type T allows undefined
+    if (value[0] === '\0') return (this.value = value as T) // Raw string value that started with '\0'
 
-    return (this.value = JSON.parse(value))
+    // Parse non JSON
+    if (value === 'undefined') return (this.value = undefined as any)
+    if (value === 'NaN') return (this.value = NaN as any)
+    if (value === 'Infinity') return (this.value = Infinity as any)
+    if (value === '-Infinity') return (this.value = -Infinity as any)
+
+    return (this.value = JSON.parse(value) as any)
   }
 
   /**
    * Resets the stored value to its configured default.
    *
    * Updates both the underlying storage and the internal cache.
-   *
-   * @example
-   * storage.reset()
-   * console.log(storage.value) // Default value
    */
-  reset(): DefaultValue {
+  reset(): T {
     return (this.value = this.defaultValue)
   }
 
@@ -182,10 +165,9 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
   }
 
   /**
-   * Clears **all** data from the associated storage backend.
+   * Clears **all** data fromstorage.
    *
-   * This affects every key in the storage instance, not just the one
-   * managed by this StorageManager.
+   * This affects every key in the storage.
    * Also clears the internal cache to prevent stale data access.
    */
   clear(): void {
@@ -203,4 +185,4 @@ class StorageManager<T, DefaultValue extends T | undefined = T | undefined> {
   }
 }
 
-export default StorageManager
+export default HyperStorage
