@@ -67,7 +67,7 @@ const userStore = new HyperStorage('userSettings', defaultValue)
 // If 'userSettings' is not present in the Storage, the defaultValue is set:
 console.log(userStore.value) // { theme: 'dark', language: 'en' }
 
-// Change theme to light
+// Change theme to light:
 userStore.value = { theme: 'light', language: 'en' }
 
 console.log(userStore.value) // { theme: 'light' }
@@ -131,7 +131,7 @@ console.log(sessionStore.storage) // Storage {sessionData: 'hN0IEUdoqmJ/', leng
 
 ```js
 sessionStore.reset()
-console.log(sessionStore.value) // 'none'
+console.log(sessionStore.value) // 'none' (= this.defaultValue)
 ```
 
 ### Removing Values
